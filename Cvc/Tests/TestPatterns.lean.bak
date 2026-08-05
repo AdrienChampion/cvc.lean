@@ -1,0 +1,80 @@
+module
+
+public import Cvc.Patterns
+
+public import CvcTests.TestSrt
+
+
+
+namespace Cvc.Tests
+
+/-- info: Cvc.Srt.Pattern [Ω] : Type -/
+#guard_msgs in #check Srt.Pattern
+
+/-- info: Cvc.Srt.Tree : Type -/
+#guard_msgs in #check Srt.Tree
+
+/-- info: Cvc.Srt.toPattern [Ω] (srt : Srt) : Env Srt.Pattern -/
+#guard_msgs in #check Srt.toPattern
+
+/-- info: Cvc.Srt.ofPattern [Ω] : Srt.Pattern → Env Srt -/
+#guard_msgs in #check Srt.ofPattern
+
+/-- info: Cvc.Srt.toTree [Ω] (srt : Srt) : Env Srt.Tree -/
+#guard_msgs in #check Srt.toTree
+
+/-- info: Cvc.Srt.ofTree [Ω] : Srt.Tree → Env Srt -/
+#guard_msgs in #check Srt.ofTree
+
+/-- info:
+srt: (Array (-> Int (_ BitVec 8) Bool Real) ?FLOATINGPOINT_TYPE)
+
+pat: Cvc.Srt.Pat.array (-> Int (_ BitVec 8) Bool Real) ?FLOATINGPOINT_TYPE
+→ array (-> Int (_ BitVec 8) Bool Real) ?FLOATINGPOINT_TYPE
+  - idx: function Int (_ BitVec 8) Bool Real
+  - elm: abstract (Float ? ?)
+
+tree: Cvc.Srt.Pat.array
+  (Cvc.Srt.Tree.intro
+    (Cvc.Srt.Pat.function
+      #[Cvc.Srt.Tree.intro (Cvc.Srt.Pat.int), Cvc.Srt.Tree.intro (Cvc.Srt.Pat.bitVec 8),
+        Cvc.Srt.Tree.intro (Cvc.Srt.Pat.bool)]
+      (Cvc.Srt.Tree.intro (Cvc.Srt.Pat.real))))
+  (Cvc.Srt.Tree.intro (Cvc.Srt.Pat.abstract (Cvc.Srt.Abstract.float)))
+→ array Cvc.Srt.Pat.function
+  #[Cvc.Srt.Tree.intro (Cvc.Srt.Pat.int), Cvc.Srt.Tree.intro (Cvc.Srt.Pat.bitVec 8),
+    Cvc.Srt.Tree.intro (Cvc.Srt.Pat.bool)]
+  (Cvc.Srt.Tree.intro (Cvc.Srt.Pat.real)) Cvc.Srt.Pat.abstract (Cvc.Srt.Abstract.float)
+  - idx: function int (bv 8) bool real
+  - elm: abstract (Float ? ?)
+-/
+#testSrt
+  let bool ← Srt.bool
+  let int ← Srt.int
+  let real ← Srt.real
+  let bv ← Srt.bitVec 8
+  let abstractFloat ← Srt.abstract .float
+  let fDom := #[int, bv, bool]
+  let f ← Srt.function fDom real
+  let array ← f.arrayTo abstractFloat
+  println! "srt: {array}"
+  println! ""
+
+  let pat : Srt.Pattern ← array.toPattern
+  println! "pat: {pat}"
+  if let .array idx elm ← array.toPattern then
+    println! "→ array {idx} {elm}"
+    if let .function #[s1, s2, s3] dom ← idx.toPattern then
+      println! "  - idx: function {s1} {s2} {s3} {dom}"
+    if let .abstract a ← elm.toPattern then
+      println! "  - elm: abstract {a}"
+
+  println! ""
+  let tree ← array.toTree
+  println! "tree: {tree}"
+  if let .array idx elm := tree then
+    println! "→ array {idx} {elm}"
+    if let .function #[.int, .bitVec size, .bool] .real := idx then
+      println! "  - idx: function int (bv {size}) bool real"
+    if let .abstract a := elm then
+      println! "  - elm: abstract {a}"

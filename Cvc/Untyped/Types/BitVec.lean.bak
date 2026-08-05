@@ -1,0 +1,87 @@
+module
+
+import all Cvc.Untyped.Srt
+
+public import Cvc.Untyped.Term
+
+
+
+namespace Cvc public section variable [Ω]
+
+/-- Bit vectors. -/
+structure BitVec (size : UInt32) where
+  /-- The bitvector representation's base. -/
+  base : BitVec.Base
+  /-- String representation of the bitvector. -/
+  repr : String
+deriving DecidableEq, Hashable, Ord
+
+namespace BitVec
+
+instance : ToTyp (BitVec size) := ⟨.bitVec size⟩
+
+/-- Size-erased version of `BitVec`. -/
+structure Erased where
+  /-- The bitvector's size. -/
+  size : UInt32
+  /-- The actual bitvector. -/
+  get : BitVec size
+
+/-- Erases a bitvector's size. -/
+def erase (bv : BitVec size) : Erased := {size, get := bv}
+
+/-- String representation. -/
+protected def toString (bv : BitVec size) : String := s!"{bv.base}{bv.repr}"
+
+instance : ToString (BitVec size) := ⟨BitVec.toString⟩
+
+/-- Creates a constant bitvector term. -/
+def toTerm (bv : BitVec size) : Env Term := Term.mkBitVecOfString size bv.repr bv.base
+
+namespace Erased
+@[inherit_doc BitVec.toString]
+protected def toString (bv : Erased) := bv.get.toString
+
+instance : ToString Erased := ⟨Erased.toString⟩
+
+@[inherit_doc BitVec.toTerm]
+def toTerm (bv : Erased) : Env Term := bv.get.toTerm
+
+/-- Retrieves the value of a constant bitvector term. -/
+def ofTerm (t : Term) (base : BitVec.Base := default) : Env Erased := do
+  let srt ← t.getSort
+  let size ← srt.getBitVectorSize
+  let repr ← t.getBitVectorValue base.toUInt32
+  return {size, get := {base, repr}}
+
+instance : TermToValue Erased := ⟨ofTerm⟩
+instance : ValueToTerm Erased := ⟨toTerm⟩
+end Erased
+
+/-- Retrieves the `BitVec` value of a constant bitvector term. -/
+def ofTerm (t : Term) (base : BitVec.Base := default) : Env (BitVec size) := do
+  let ⟨size', bv⟩ ← Erased.ofTerm t (base := base)
+  if h : size' = size then return h ▸ bv
+  else throwUser s!"expected bitvector of size {size}, got one of size {size'}: {t}"
+
+instance : SrtLike (BitVec size) where
+  termToValue := ofTerm
+  valueToTerm := toTerm
+
+end BitVec
+
+
+
+namespace Term
+
+/-- Creates a constant bitvector term. -/
+def mkBitVec (bv : BitVec size) : Env Term := mkBitVecOfString size bv.repr bv.base
+
+/-- Retrieves the `BitVec` value of a constant bitvector term. -/
+def getBitVecValue (t : Term) (base : BitVec.Base := default) : Env BitVec.Erased := do
+  let srt ← t.getSort
+  let size ← srt.getBitVectorSize
+  let s ← t.getBitVectorValue base.toUInt32
+  return { size, get := ⟨base, s⟩ }
+
+end Term

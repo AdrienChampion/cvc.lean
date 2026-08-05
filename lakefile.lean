@@ -21,5 +21,5 @@ require "abdoo8080" / cvc5
 lean_lib Cvc {}
 
 lean_lib cvcTests {
-  globs := #[Glob.submodules `Tests]
+  globs := #[Glob.submodules `Cvc.Tests]
 }

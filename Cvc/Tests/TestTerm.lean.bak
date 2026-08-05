@@ -1,0 +1,117 @@
+module
+
+public import Cvc.Term
+
+public import CvcTests.TestSrt
+
+
+
+namespace Cvc.Tests
+
+
+open Lean (mkIdent) in
+/-- Helper `Term`-test macro with an expected output. -/
+macro cmt:docComment "#testTerm " body:doSeq : command => do
+  let (bool, int, _real) := (`bool |> mkIdent, `int |> mkIdent, `real |> mkIdent)
+  let (tru, fls) := (`tru |> mkIdent, `fls |> mkIdent)
+  let (b1, b2, b3, b4) := (`b1 |> mkIdent, `b2 |> mkIdent, `b3 |> mkIdent, `b4 |> mkIdent)
+  let (i1, i2, i3, i4) := (`i1 |> mkIdent, `i2 |> mkIdent, `i3 |> mkIdent, `i4 |> mkIdent)
+  `(
+    $cmt:docComment
+    #testSrt do
+      let $tru ← Term.mkBool true
+      let $fls ← Term.mkBool false
+      let $b1 ← Term.mkConst "b1" $bool
+      let $b2 ← Term.mkConst "b2" $bool
+      let $b3 ← Term.mkConst "b3" $bool
+      let $b4 ← Term.mkConst "b4" $bool
+      let $i1 ← Term.mkConst "i1" $int
+      let $i2 ← Term.mkConst "i2" $int
+      let $i3 ← Term.mkConst "i3" $int
+      let $i4 ← Term.mkConst "i4" $int
+      do $body
+  )
+/-- Helper `Term`-test macro with an empty expected output. -/
+macro "#testTerm! " body:doSeq : command => `(/-- -/ #testTerm $body)
+
+#testTerm!
+  fls.implies b1 >>= assertString "(=> false b1)"
+  Term.impliesN #[fls, b1] >>= assertString "(=> false b1)"
+  Term.impliesN #[tru, b1, b2] >>= assertString "(=> true (=> b1 b2))"
+
+/--
+error: could not synthesize default value for parameter 'atLeastTwoElements' using tactics
+---
+error: failed to prove term array has at least two elements
+inst✝ : Ω
+bool int real : Srt
+tru fls b1 b2 b3 b4 i1 i2 i3 i4 : Term
+⊢ 2 ≤ #[].size
+-/
+#testTerm Term.impliesN #[] >>= assertString "<fail>"
+
+/--
+error: could not synthesize default value for parameter 'atLeastTwoElements' using tactics
+---
+error: failed to prove term array has at least two elements
+inst✝ : Ω
+bool int real : Srt
+tru fls b1 b2 b3 b4 i1 i2 i3 i4 : Term
+⊢ 2 ≤ #[b1].size
+-/
+#testTerm Term.impliesN #[b1] >>= assertString "<fail>"
+
+#testTerm!
+  Term.andN' #[] >>= assertString tru.toString
+  Term.andN' #[b1] >>= assertString b1.toString
+  fls.and b1 >>= assertString "(and false b1)"
+  Term.andN #[fls, b1] >>= assertString "(and false b1)"
+  Term.andN' #[fls, b1] >>= assertString "(and false b1)"
+  Term.andN #[tru, b1, b2] >>= assertString "(and true b1 b2)"
+  Term.andN' #[tru, b1, b2] >>= assertString "(and true b1 b2)"
+
+#testTerm!
+  Term.orN' #[] >>= assertString fls.toString
+  Term.orN' #[b1] >>= assertString b1.toString
+  fls.or b1 >>= assertString "(or false b1)"
+  Term.orN #[fls, b1] >>= assertString "(or false b1)"
+  Term.orN' #[fls, b1] >>= assertString "(or false b1)"
+  Term.orN #[tru, b1, b2] >>= assertString "(or true b1 b2)"
+  Term.orN' #[tru, b1, b2] >>= assertString "(or true b1 b2)"
+
+#testTerm!
+  Term.xorN' #[] >>= assertString fls.toString
+  Term.xorN' #[b1] >>= assertString b1.toString
+  fls.xor b1 >>= assertString "(xor false b1)"
+  Term.xorN #[fls, b1] >>= assertString "(xor false b1)"
+  Term.xorN' #[fls, b1] >>= assertString "(xor false b1)"
+  Term.xorN #[tru, b1, b2] >>= assertString "(xor (xor true b1) b2)"
+  Term.xorN' #[tru, b1, b2] >>= assertString "(xor (xor true b1) b2)"
+
+#testTerm!
+  let not_b1 ← Term.not b1
+  not_b1 |> assertString "(not b1)"
+  b1.not >>= assertEq not_b1
+
+#testTerm!
+  Term.ite tru b1 b2 >>= assertString "(ite true b1 b2)"
+  fls.thenElse b2 b1 >>= assertString "(ite false b2 b1)"
+
+/-- info:
+array := ((as const (Array Bool Int)) 7)
+      := (store ((as const (Array Bool Int)) 7) true 13)
+      := (store (store ((as const (Array Bool Int)) 7) true 13) false 5)
+-/
+#testTerm
+  let boolArray ← bool.arrayTo int
+  let five ← Term.mkInt 5
+  let seven ← Term.mkInt 7
+  let thirteen ← Term.mkInt 13
+  let tru ← Term.mkBool true
+  let fls ← Term.mkBool false
+  let array ← Term.mkConstArray boolArray seven
+  println! "array := {array}"
+  let array ← array.store tru thirteen
+  println! "      := {array}"
+  let array ← array.store fls five
+  println! "      := {array}"
