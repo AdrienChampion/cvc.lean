@@ -11,6 +11,8 @@ public import Cvc.Untyped
 public import Cvc.Typed
 public import Cvc.Ext
 
+public import Cvc.Proto
+
 -- public import Cvc.Patterns
 -- public import Cvc.Datatype
 -- public import Cvc.Grammar

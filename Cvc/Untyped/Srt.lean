@@ -198,3 +198,15 @@ namespace Regex
 instance : ToTyp Regex := ⟨.regex⟩
 
 end Regex
+
+
+
+/-! ### Functions -/
+
+namespace ToTyp
+
+instance [A : ToTyp α] [B : ToTyp β] : ToTyp (α → β) := ⟨.function A.typ B.typ⟩
+
+example : ToTyp (Int → Bool → Int → Rat) := inferInstance
+
+end ToTyp

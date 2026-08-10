@@ -1,17 +1,29 @@
+/-
+Copyright (c) 2026 by the authors listed in the file AUTHORS and their
+institutional affiliations. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Adrien Champion
+-/
+
 module
 
-import all Cvc.Basic.Env
-import all Cvc.Untyped.Srt
+import all Cvc.Proto.Srt
 
-public import Cvc.Untyped.Term
+public import Cvc.Proto.Srt
 public import Std.Data.TreeSet.Basic
 public import Std.Data.TreeSet.Iterator
 
 
 
-namespace Cvc public section variable [Ω]
+/-! # Sets
 
-open Untyped
+The Lean type denoting an SMT set. It is a `Std.TreeSet`, so its element type must be ordered —
+which is where the `Ord` binders on the generated set operators come from.
+
+Only the Lean side lives here. Turning a set into a term and back is in
+`Cvc/Proto/{Untyped,Typed}/Term/Set.lean`, beside the constructors that do it.
+-/
+namespace Cvc.Proto public section variable [Ω]
 
 /-- Alias for `Std.TreeSet`. -/
 abbrev Set (α : Type) [Ord α] := Std.TreeSet α
@@ -36,22 +48,6 @@ protected def toString [ToString α] (set : Set α) : String :=
     s!"\{ {s} }"
 
 instance [ToString α] : ToString (Set α) := ⟨Set.toString⟩
-
-section variable [ToTyp α] [Ord α]
-
-def toTerm [ValueToTerm α] (set : Set α) : Env Term := do
-  let mut term ← Srt.of (Set α) >>= Term.mkEmptySet
-  for elem in set do
-    term ← Term.mkValue elem >>= term.setInsert
-  return term
-
-instance [ValueToTerm α] : ValueToTerm (Set α) := ⟨toTerm⟩
-
-def ofTerm [TermToValue α] (t : Term) : Env (Set α) := do
-  let elems ← t.getSetValue
-  elems.foldlM (init := Set.empty) fun set term => set.insert <$> Term.getValue term
-
-instance [TermToValue α] : TermToValue (Set α) := ⟨ofTerm⟩
 
 protected def compare (s1 s2 : Set α) : Ordering := Id.run do
   let mut s2 := s2.iter
@@ -122,7 +118,5 @@ compare { 3 } { 3, 7 }
   showCmp set1 set3
   showCmp set3 set2
   showCmp set2 set3
-
-end
 
 end Set

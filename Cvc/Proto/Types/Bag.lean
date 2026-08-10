@@ -1,16 +1,30 @@
+/-
+Copyright (c) 2026 by the authors listed in the file AUTHORS and their
+institutional affiliations. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Adrien Champion
+-/
+
 module
 
-import all Cvc.Untyped.Srt
+import all Cvc.Proto.Srt
 
-public import Cvc.Untyped.Term
+public import Cvc.Proto.Srt
 public import Std.Data.TreeMap.Basic
 public import Std.Data.TreeMap.Iterator
 
 
 
-namespace Cvc public section variable [Ω]
+/-! # Bags
 
-open Untyped
+The Lean type denoting an SMT bag: a `Std.TreeMap` from elements to their multiplicity, so the
+element type must be ordered. A zero multiplicity is not represented, which is what `alter` keeps
+true.
+
+Only the Lean side lives here. Turning a bag into a term and back is in
+`Cvc/Proto/{Untyped,Typed}/Term/Bag.lean`, beside the constructors that do it.
+-/
+namespace Cvc.Proto public section variable [Ω]
 
 abbrev Bag (α : Type) [Ord α] := Std.TreeMap α Int
 
@@ -56,37 +70,6 @@ protected def toString [ToString α] (bag : Bag α) : String :=
 instance [ToString α] : ToString (Bag α) := ⟨Bag.toString⟩
 
 instance [A : ToTyp α] : ToTyp (Bag α) := ⟨.bag A.typ⟩
-
-section variable [A : ToTyp α] [Ord α]
-
-def toTerm [ValueToTerm α] (set : Bag α) : Env Term := do
-  let empty ← Srt.of (Bag α) >>= Term.mkEmptyBag
-  set.foldlM (init := empty) fun bag elem count => do
-    let elem ← Term.mkValue elem
-    let count ← Term.mkInt count
-    Term.mkBagWith elem count >>= bag.bagUnionMax
-
-instance [ValueToTerm α] : ValueToTerm (Bag α) := ⟨toTerm⟩
-
-partial def ofTerm [TermToValue α] (t : Term) : Env (Bag α) := do
-  let k ← t.getKind
-  match k with
-  | .BAG_EMPTY => return Bag.empty
-  | .BAG_MAKE =>
-    let ⟨kids, _⟩ ← t.getSizedKids 2
-    let elem ← Term.getValue kids[0]
-    let count ← Term.getValue kids[1]
-    return Bag.empty.insert elem count
-  | .BAG_UNION_MAX
-  | .BAG_UNION_DISJOINT
-  | .BAG_INTER_MIN
-  | .BAG_DIFFERENCE_SUBTRACT
-  | .BAG_DIFFERENCE_REMOVE => throwTodo s!"bag-value reconstruction for term-kind `{k}`"
-  | _ => throwUser s!"expected `{A.typ}`-bag"
-
-instance [TermToValue α] : TermToValue (Bag α) := ⟨ofTerm⟩
-
-end
 
 protected def compare (b1 b2 : Bag α) : Ordering := Id.run do
   let mut b2 := b2.iter
