@@ -212,3 +212,86 @@ isRecord {tupDt.isRecord}"
   println! "plain datatype      : isTuple {dt.isTuple} / isParametric {dt.isParametric} / \
 isCoDatatype {dt.isCoDatatype}"
   println! "finite              : {← dt.isFinite}"
+
+
+
+/-! ## Matching
+
+A match picks a body by the constructor its scrutinee was built with. A constructor taking fields
+binds them to bound variables, which is all the binding a match needs — no quantifier is involved.
+-/
+
+/-- info:
+match     : (match l (((cons h t) h) (nil 0)))
+sort      : Int
+head of l : 7
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Solver.new
+  s.setOption "produce-models" "true"
+
+  let nil ← Proto.Datatype.Constructor.Decl.mk "nil"
+  let cons ← Proto.Datatype.Constructor.Decl.mk "cons"
+  let cons ← (← cons.addSelector "head" (← Srt.int)).addSelectorSelf "tail"
+  let decl ← Proto.Datatype.Decl.mk "Lst"
+  let lst ← Srt.datatype (← (← decl.addConstructor nil).addConstructor cons)
+  let dt ← lst.getDatatype
+  let nilC ← dt.getConstructor "nil"
+  let consC ← dt.getConstructor "cons"
+
+  -- the head of `l`, or zero if it has none
+  let l ← s.declareConst "l" lst
+  let h ← BVar.mk (← Srt.int) "h"
+  let t ← BVar.mk lst "t"
+  let consCase ←
+    Term.matchBindCase #[h, t] (← Term.applyConstructor (← consC.getTerm) #[h, t]) h
+  let nilCase ←
+    Term.matchCase (← Term.applyConstructor (← nilC.getTerm)) (← Term.mkInt 0)
+  let m ← Term.mkMatch l #[consCase, nilCase]
+  println! "match     : {m}"
+  println! "sort      : {← m.getSort}"
+
+  -- `l` is a one-element list, so the match takes the `cons` branch
+  let nilT ← Term.applyConstructor (← nilC.getTerm)
+  let seven ← Term.applyConstructor (← consC.getTerm) #[← Term.mkInt 7, nilT]
+  (do Term.equal l seven) >>= s.assert
+  s.checkSat (ifSat := do println! "head of l : {← s.getValueAs Int m}")
+
+/-! A case whose pattern is a lone bound variable matches whatever the earlier ones left over, and
+is how a match covers the constructors it does not name. Coverage and agreement between the bodies
+are cvc5's to check, both being properties of the datatype's declaration.
+-/
+
+/-- info:
+catch-all : (match l (((cons h t) h) (x 0)))
+partial   : [internal] cases for match term are not exhaustive
+mixed     : [internal] incomparable types in match case list
+true: Bool
+expected: Int
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Solver.new
+  let nil ← Proto.Datatype.Constructor.Decl.mk "nil"
+  let cons ← Proto.Datatype.Constructor.Decl.mk "cons"
+  let cons ← (← cons.addSelector "head" (← Srt.int)).addSelectorSelf "tail"
+  let decl ← Proto.Datatype.Decl.mk "Lst"
+  let lst ← Srt.datatype (← (← decl.addConstructor nil).addConstructor cons)
+  let dt ← lst.getDatatype
+  let consC ← dt.getConstructor "cons"
+  let l ← s.declareConst "l" lst
+
+  let h ← BVar.mk (← Srt.int) "h"
+  let t ← BVar.mk lst "t"
+  let consCase ←
+    Term.matchBindCase #[h, t] (← Term.applyConstructor (← consC.getTerm) #[h, t]) h
+
+  let x ← BVar.mk lst "x"
+  let anyCase ← Term.matchBindCase #[x] x (← Term.mkInt 0)
+  println! "catch-all : {← Term.mkMatch l #[consCase, anyCase]}"
+
+  let caught (code : Env String) : Env String := try code catch e => pure s!"{e}"
+  println! "partial   : {← caught do pure s!"{← Term.mkMatch l #[consCase]}"}"
+  let boolCase ←
+    Term.matchCase (← Term.applyConstructor (← (← dt.getConstructor "nil").getTerm))
+      (← Term.mkTrue)
+  println! "mixed     : {← caught do pure s!"{← Term.mkMatch l #[consCase, boolCase]}"}"

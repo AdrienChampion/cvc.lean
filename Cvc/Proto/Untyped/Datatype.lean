@@ -13,6 +13,7 @@ import all Cvc.Proto.Untyped.Term.Defs
 import all Cvc.Proto.Untyped.Solver
 
 public import Cvc.Proto.Srt
+public import Cvc.Proto.Untyped.BVar
 public import Cvc.Proto.Untyped.Term.Value
 public import Cvc.Proto.Untyped.Solver
 
@@ -42,7 +43,7 @@ Recursion goes through `addSelectorSelf` for a datatype referring to itself, and
 -/
 namespace Cvc.Proto public section variable [Ω]
 
-open Untyped (Term Terms)
+open Untyped (Term Terms BVar BVars)
 
 open cvc5 renaming
   Datatype → Dt, DatatypeDecl → DtD, DatatypeSelector → DtS,
@@ -255,5 +256,55 @@ def applyTester (tester : Term) (dt : Term) : Env Term :=
 /-- The datatype value with one field replaced. -/
 def applyUpdater (updater : Term) (dt : Term) (newValue : Term) : Env Term :=
   Cvc.runUnsafe fun tm => tm.mkTerm .APPLY_UPDATER #[updater, dt, newValue]
+
+end Untyped.Term
+
+
+
+/-! ## Matching
+
+A match term picks a body by the constructor its scrutinee was built with. Each case pairs a
+*pattern* with the body to use when it applies, and `mkMatch` collects them.
+
+Nothing here needs a quantifier: a case binds its constructor's fields to plain bound variables,
+which `Term.mkBVar` already produces. `matchBindCase` builds the variable list cvc5 wants, so that
+term never has to be spelled.
+
+Two conditions are cvc5's to check, since both are properties of the datatype's declaration rather
+than of any term: the cases must cover every constructor unless one of them is a catch-all, and all
+of the bodies must have the same sort.
+-/
+
+namespace Untyped.Term
+
+/-- A match case for a constructor taking no field.
+
+`pattern` is that constructor applied to nothing. A constructor that does take fields needs
+`matchBindCase`, which binds them.
+-/
+def matchCase (pattern body : Term) : Env Term :=
+  Cvc.runUnsafe fun tm => tm.mkTerm .MATCH_CASE #[pattern, body]
+
+/-- A match case binding the variables its pattern mentions.
+
+`pattern` is either a constructor applied to exactly `bvars`, or a single bound variable — which
+makes the case a **catch-all**, matching whatever the earlier cases left over. `body` is free to
+mention the bound variables.
+-/
+def matchBindCase (bvars : BVars) (pattern body : Term) : Env Term :=
+  Cvc.runUnsafe fun tm => do
+    let vars ← tm.mkTerm .VARIABLE_LIST (bvars.map BVar.toTerm)
+    tm.mkTerm .MATCH_BIND_CASE #[vars, pattern, body]
+
+/-- The body of whichever case matches the scrutinee.
+
+Every case must come from `matchCase` or `matchBindCase`, and the resulting term has the sort the
+bodies share.
+-/
+def mkMatch
+  (scrutinee : Term) (cases : Terms)
+  (_h : 0 < cases.size := by (try grind) <;> fail "failed to prove there is at least one case")
+: Env Term :=
+  Cvc.runUnsafe fun tm => tm.mkTerm .MATCH (#[scrutinee] ++ cases)
 
 end Untyped.Term
