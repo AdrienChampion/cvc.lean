@@ -20,6 +20,14 @@ require "abdoo8080" / cvc5
 @[default_target]
 lean_lib Cvc {}
 
+-- `Cvc.Proto2` is a fork of `Cvc.Proto`, so the two cannot be imported together: a
+-- `declare_syntax_cat` and a command token are both global, and each fork declares its own. It
+-- gets its own target rather than being pulled in by `Cvc.lean`.
+@[default_target]
+lean_lib proto2 {
+  roots := #[`Cvc.Proto2]
+}
+
 lean_lib cvcTests {
   globs := #[Glob.submodules `Cvc.Tests]
 }

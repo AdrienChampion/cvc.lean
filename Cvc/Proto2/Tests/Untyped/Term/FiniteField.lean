@@ -1,0 +1,39 @@
+/-
+Copyright (c) 2026 by the authors listed in the file AUTHORS and their
+institutional affiliations. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Adrien Champion
+-/
+
+module
+
+import Cvc.Proto2.Untyped.Term.FiniteField
+import Cvc.Proto2.Untyped.Term.Bool
+import Cvc.Proto2.Types.FiniteField
+
+public meta import Cvc.Proto2.Untyped.Term.FiniteField
+public meta import Cvc.Proto2.Untyped.Term.Bool
+public meta import Cvc.Proto2.Types.FiniteField
+
+
+
+/-! # Generated FiniteField constructors, sort-erased -/
+namespace Cvc.Proto2.Tests.Untyped.Term.FiniteField
+
+open Cvc
+open Cvc.Proto2.Untyped.Term
+
+/-- info:
+add   : (ff.add a b)
+mul   : (ff.mul a b)
+neg   : (ff.neg a)
+bitsum: (ff.bitsum a b)
+-/
+#guard_msgs in #eval Env.runIO do
+  let a ← Cvc.Proto2.Untyped.Term.mkSymbolAs (Cvc.Proto2.FiniteField 7) "a"
+  let b ← Cvc.Proto2.Untyped.Term.mkSymbolAs (Cvc.Proto2.FiniteField 7) "b"
+
+  println! "add   : {← ffAdd a b}"
+  println! "mul   : {← ffMul a b}"
+  println! "neg   : {← ffNeg a}"
+  println! "bitsum: {← ffBitsum a b}"
