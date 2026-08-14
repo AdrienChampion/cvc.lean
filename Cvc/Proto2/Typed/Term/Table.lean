@@ -97,10 +97,11 @@ def tableAggregate [Ord γ] (columns : Array Nat) (f : Term (Tup α β → γ �
 
 /-- Projects every row onto the given columns, in the order given.
 
-Sort-erased, as `relProject` is: which columns an index array selects is a runtime value.
+Typed by its `Cols` spine, as `relProject` is; `T.tableProject` on an `Array Nat` is the
+sort-erased form, for columns that are only known at run time.
 -/
-def tableProject (columns : Array Nat) (table : Term (Tab α β)) : Env Untyped.Term :=
-  T.tableProject columns table.erase
+def tableProject (cols : Cols α β α' β') (table : Term (Tab α β)) : Env (Term (Tab α' β')) :=
+  T.tableProject cols.toArray table.erase
 
 
 

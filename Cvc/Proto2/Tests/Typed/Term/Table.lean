@@ -223,3 +223,70 @@ card of unionMaxN      : 1
   s.checkSat (ifSat := do
     println! "card of unionDisjointN : {← s.getValue disjoint}"
     println! "card of unionMaxN      : {← s.getValue max}")
+
+
+
+/-! ## Projection
+
+`tableProject` is typed by the same `Cols` spine `relProject` uses — see the relation tests for the
+positions themselves, which are shared. What is worth pinning here is that projection is a *bag*
+operation: it maps each row and keeps every one, so rows that differ only in a dropped column
+become the same row rather than merging.
+-/
+
+/-- A four-column table, so that a middle column has somewhere to be. -/
+abbrev B4 := Tab [Int, Bool, String] Rat
+
+/-- info:
+table          : (Bag (Tuple Int Bool String Real))
+project [2, 0] : (Bag (Tuple String Int))
+project [3, 3] : (Bag (Tuple Real Real))
+project [1]    : (Bag (Tuple Bool))
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Solver.new
+  let b ← s.declareConst B4 "B"
+  let sortOf (t : Untyped.Term) : Env String := do return s!"{← t.getSort}"
+  println! "table          : {← sortOf b.erase}"
+  -- reordering, duplication, and a one-column result that is still a tuple
+  println! "project [2, 0] : {← sortOf (← tableProject cols% [2, 0] b).erase}"
+  println! "project [3, 3] : {← sortOf (← tableProject cols% [3, 3] b).erase}"
+  println! "project [1]    : {← sortOf (← tableProject cols% [1] b).erase}"
+
+section indices
+variable [Ω] (b : Term B4) (r : Term (Rel [Int, Bool, String] Rat))
+
+/-- The result index is the columns selected, in the order selected. -/
+example : Env (Term (Tab [String] Int)) := tableProject cols% [2, 0] b
+/-- One column still gives a table of one-column rows. -/
+example : Env (Term (Tab [] Bool)) := tableProject cols% [1] b
+
+-- a relation is a set of tuples, so the table projection does not apply to it
+#guard_msgs(drop error) in example := tableProject cols% [2, 0] r
+
+end indices
+
+/-! Two rows that agree on the projected columns and differ elsewhere give **two** rows, not one —
+the multiplicity is what a table keeps and a relation does not. `tableSetof` is how to ask for the
+relation-like answer.
+-/
+
+/-- info:
+rows after projecting onto [2, 1] : 2
+distinct rows                     : 1
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Solver.new
+  s.setOption "produce-models" "true"
+  let row (i : Int) : Env (Term (Tup [Int, Bool, String] Rat)) := do
+    mkTup <| .cons (← mkInt i) <| .cons (← mkTrue) <| .cons (← mkString "a" false)
+      <| .last (← mkReal (1/2 : Rat))
+  -- the two rows differ only in column 0, which the projection drops
+  let b ← tableUnionDisjoint (← tableMake (← row 1) (← mkInt 1))
+    (← tableMake (← row 2) (← mkInt 1))
+  let projected ← tableProject cols% [2, 1] b
+  let card ← tableCard projected
+  let distinct ← tableCard (← tableSetof projected)
+  s.checkSat (ifSat := do
+    println! "rows after projecting onto [2, 1] : {← s.getValue card}"
+    println! "distinct rows                     : {← s.getValue distinct}")

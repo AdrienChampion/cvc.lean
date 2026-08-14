@@ -377,3 +377,176 @@ card of unionN #[a, b]    : 2
   s.checkSat (ifSat := do
     println! "card of unionN #[a, b, c] : {← s.getValue three}"
     println! "card of unionN #[a, b]    : {← s.getValue two}")
+
+
+
+/-! ## Positions
+
+A `Col` is a component's position carrying that component's type, written as a numeral with `col%`.
+It is a plain value with no `Ω` — an index into a shape, not a term — so a column can be named once
+and reused.
+-/
+
+/-- A four-component tuple, so that a middle position has somewhere to be. -/
+abbrev T4 := Tup [Int, Bool, String] Rat
+
+/-- `(1, true, "s", 1/2)`. -/
+def mk4 [Ω] : Env (Term T4) := do
+  mkTup <| .cons (← mkInt 1) <| .cons (← mkTrue) <| .cons (← mkString "s" false)
+    <| .last (← mkReal (1/2 : Rat))
+
+/-- info:
+tuple : (tuple 1 true "s" (/ 1 2)) : (Tuple Int Bool String Real)
+at 0  : ((_ tuple.select 0) (tuple 1 true "s" (/ 1 2))) : Int
+at 1  : ((_ tuple.select 1) (tuple 1 true "s" (/ 1 2))) : Bool
+at 2  : ((_ tuple.select 2) (tuple 1 true "s" (/ 1 2))) : String
+at 3  : ((_ tuple.select 3) (tuple 1 true "s" (/ 1 2))) : Real
+-/
+#guard_msgs in #eval Env.runIO do
+  let t ← mk4
+  let show! (label : String) (x : Untyped.Term) : Env Unit := do
+    println! "{label} : {x} : {← x.getSort}"
+  show! "tuple" t.erase
+  -- position 3 is the split-off `β`, and needs no different spelling from the others
+  show! "at 0 " (← t.tupAt col%0).erase
+  show! "at 1 " (← t.tupAt col%1).erase
+  show! "at 2 " (← t.tupAt col%2).erase
+  show! "at 3 " (← t.tupAt col%3).erase
+
+/-! `tupAt` is the general form of the two accessors that predate it, and the only way to a middle
+component that does not go through `tupRest`. It agrees with them semantically rather than
+syntactically: reaching position 1 through `tupRest` builds a projection and then selects from it,
+where `tupAt col%1` selects directly.
+-/
+
+/-- info:
+tupFst  = at 0 : yes
+tupLast = at 3 : yes
+tupRest = at 1 : yes
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Solver.new
+  let t ← mk4
+  let agree {α : Type} (label : String) (a b : Term α) : Env Unit := do
+    s.push
+    (do equal a b >>= Term.not) >>= s.assert
+    println! "{label} : {if ← s.checkIsSat then "NO" else "yes"}"
+    s.pop
+  agree "tupFst  = at 0" (← tupFst t) (← t.tupAt col%0)
+  agree "tupLast = at 3" (← tupLast t) (← t.tupAt col%3)
+  agree "tupRest = at 1" (← tupFst (← tupRest t)) (← t.tupAt col%1)
+
+section positions
+variable [Ω] (t : Term T4)
+
+/-- Each position carries its own component's type. -/
+example : Env (Term Int) := t.tupAt col%0
+example : Env (Term Bool) := t.tupAt col%1
+example : Env (Term String) := t.tupAt col%2
+example : Env (Term Rat) := t.tupAt col%3
+
+/-- A column is `Ω`-free, so it can be named at the top level and reused. -/
+def flag : Col [Int, Bool, String] Rat Bool := col%1
+
+example : Env (Term Bool) := t.tupAt flag
+
+-- past the last position there is no `ColHead` instance left to end the chain
+#guard_msgs(drop error) in example := t.tupAt col%4
+
+-- and a position's type is not negotiable
+#guard_msgs(drop error) in example : Env (Term Int) := t.tupAt col%1
+
+end positions
+
+/-! A position needs a concrete component list, since it is resolved by the shape of that list. An
+abstract tail is therefore rejected — the same limit `tupFst`/`tupLast` have, and the reason
+projection over an unknown shape stays sort-erased.
+-/
+
+#guard_msgs(drop error) in
+example [Ω] (t : Term (Tup (Int :: αs) Rat)) := t.tupAt col%1
+
+
+
+/-! ## Projection
+
+`cols%` collects positions into a spine that computes the index the projection lands at. That is
+what makes `relProject`/`tableProject` typed: cvc5 takes an `Array Nat`, whose contents are a
+runtime value, so a projection built from one could only be sort-erased.
+-/
+
+/-- info:
+project [2, 0] : ((_ tuple.project 2 0) (tuple 1 true "s" (/ 1 2))) : (Tuple String Int)
+project [3, 3] : ((_ tuple.project 3 3) (tuple 1 true "s" (/ 1 2))) : (Tuple Real Real)
+project [1]    : ((_ tuple.project 1) (tuple 1 true "s" (/ 1 2))) : (Tuple Bool)
+-/
+#guard_msgs in #eval Env.runIO do
+  let t ← mk4
+  let show! (label : String) (x : Untyped.Term) : Env Unit := do
+    println! "{label} : {x} : {← x.getSort}"
+  -- reordering
+  show! "project [2, 0]" (← tupProject cols% [2, 0] t).erase
+  -- and duplication: a position may appear twice
+  show! "project [3, 3]" (← tupProject cols% [3, 3] t).erase
+  -- one position still gives a *tuple*, which is what separates this from `tupAt`
+  show! "project [1]   " (← tupProject cols% [1] t).erase
+
+/-! The spine really carries the positions as written — in order, duplicates and all. -/
+
+#guard (cols% [2, 0] : Cols [Int, Bool, String] Rat [String] Int).toArray == #[2, 0]
+#guard (cols% [3, 3] : Cols [Int, Bool, String] Rat [Rat] Rat).toArray == #[3, 3]
+#guard (cols% [1] : Cols [Int, Bool, String] Rat [] Bool).toArray == #[1]
+#guard (col%3 : Col [Int, Bool, String] Rat Rat).toNat == 3
+
+section projection
+variable [Ω] (t : Term T4) (r : Term (Rel [Int, Bool, String] Rat))
+
+/-- The result index is the components selected, in the order selected. -/
+example : Env (Term (Tup [String] Int)) := tupProject cols% [2, 0] t
+/-- Duplication is expressible, the same position appearing twice. -/
+example : Env (Term (Tup [Rat] Rat)) := tupProject cols% [3, 3] t
+/-- One position gives a one-component tuple. -/
+example : Env (Term (Tup [] Bool)) := tupProject cols% [1] t
+/-- Lifted to a relation, the element index is what changes. -/
+example : Env (Term (Rel [String] Int)) := relProject cols% [2, 0] r
+
+/-- An element may be any `Col` term, so a named column reads as itself. -/
+example : Env (Term (Tup [Bool] Int)) := tupProject cols% [flag, 0] t
+
+-- note `cols% []` is a *parse* error, `,+` taking at least one position, so the selection cannot
+-- come out empty and there is nothing to reject at elaboration time
+
+-- and a spine for another shape does not apply
+#guard_msgs(drop error) in
+example [Ω] (u : Term (Tup [Bool] Int)) := tupProject (cols% [2, 0] : Cols [Int, Bool, String] Rat
+  [String] Int) u
+
+end projection
+
+
+
+/-! ## Projection, solving
+
+A projected relation holds exactly the projections of its tuples — checked both ways, since
+membership alone would not rule out a relation that holds more.
+-/
+
+/-- info:
+projection holds the expected tuple : yes
+and holds nothing else              : yes
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Solver.new
+  let t ← mk4
+  let r ← relSingleton t
+  let projected ← relProject cols% [2, 0] r
+  let expected ← mkTup (.cons (← mkString "s" false) (.last (← mkInt 1)))
+
+  s.push
+  (do relMember expected projected >>= Term.not) >>= s.assert
+  println! "projection holds the expected tuple : {if ← s.checkIsSat then "NO" else "yes"}"
+  s.pop
+
+  -- membership alone would not rule out a projection holding more, so pin it exactly
+  (do equal projected (← relSingleton expected) >>= Term.not) >>= s.assert
+  println! "and holds nothing else              : {if ← s.checkIsSat then "NO" else "yes"}"

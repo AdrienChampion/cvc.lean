@@ -11,6 +11,8 @@ import all Cvc.Proto2.Env
 import all Cvc.Proto2.Srt
 import all Cvc.Proto2.Untyped.Term.Defs
 import all Cvc.Proto2.Typed.Term.Defs
+-- `Col`/`Cols` hold their positions privately, and the projections below are what read them out
+import all Cvc.Proto2.Types.Relation
 
 public import Cvc.Proto2.Types.Relation
 public import Cvc.Proto2.Untyped.Term.Relation
@@ -98,6 +100,23 @@ Composing it with `tupFst` reaches any position.
 def tupRest (tuple : Term (Tup (α :: αs) β)) : Env (Term (Tup αs β)) :=
   -- components `1 … αs.length + 1`: all of `αs`, then `β`
   tuple.erase.tupleProject ((Array.range (αs.length + 1)).map (· + 1))
+
+/-- The component at the given position, at that component's own type.
+
+The general form of `tupFst`/`tupLast`, and the way to reach a middle component without composing
+`tupRest`: `t.tupAt col%1` is the second one.
+-/
+def tupAt (tuple : Term (Tup α β)) (idx : Col α β γ) : Env (Term γ) :=
+  tuple.erase.tupleSelect idx.toNat
+
+/-- The tuple of the components at the given positions, in the order given.
+
+A tuple-to-tuple operation, as `tupleSelect` is not: projecting one position gives a one-component
+tuple, where `tupAt` gives the component. The `Cols` spine is what carries the result's index, so
+this is typed where the sort-erased `Untyped.Term.tupleProject` cannot be.
+-/
+def tupProject (cols : Cols α β α' β') (tuple : Term (Tup α β)) : Env (Term (Tup α' β')) :=
+  tuple.erase.tupleProject cols.toArray
 
 
 
@@ -195,11 +214,12 @@ def relTableJoin (indices : Array (Nat × Nat)) (lft : Term (Rel α β)) (rgt : 
 
 /-- Projects every tuple onto the given components, in the order given.
 
-Sort-erased: which components an index array selects is a runtime value, so no index describes the
-result. `Untyped.Term.typeCheck` puts one back on.
+Tuple projection lifted to a relation, so it reorders and duplicates as readily as it selects. The
+`Cols` spine carries the result's index — `T.relProject` on an `Array Nat` is the sort-erased form,
+for positions that are only known at run time.
 -/
-def relProject (indices : Array Nat) (rel : Term (Rel α β)) : Env Untyped.Term :=
-  T.relProject indices rel.erase
+def relProject (cols : Cols α β α' β') (rel : Term (Rel α β)) : Env (Term (Rel α' β')) :=
+  T.relProject cols.toArray rel.erase
 
 
 
