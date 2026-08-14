@@ -11,6 +11,7 @@ public import Cvc.Proto2.Types.Set
 public import Cvc.Proto2.Types.Bag
 public import Cvc.Proto2.Types.Array
 public import Cvc.Proto2.Types.Tuple
+public import Cvc.Proto2.Types.Relation
 public import Cvc.Proto2.Types.Float
 public import Cvc.Proto2.Types.FiniteField
 

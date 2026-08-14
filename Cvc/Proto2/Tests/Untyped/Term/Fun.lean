@@ -125,3 +125,107 @@ higher-order    : (hof f)
 
   let result ← solver.checkSat (ifSat := return "sat") (ifUnsat := return "unsat")
   println! "x = y ∧ f(x) ≠ f(y) → {result}"
+
+
+
+/-! ## Applying any number of arguments
+
+`applyN` takes the arguments as an array, so the arity is not capped at the three fixed spellings.
+It builds the same `APPLY_UF`, with the function as the first child.
+-/
+
+/-- info:
+apply2 f i b : (f i b) : Int
+applyN 2     : (f i b) : Int
+applyN 4     : (g i i i i) : Int
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Cvc.Proto2.Untyped.Solver.new
+  let int ← Srt.int
+  let f ← s.declareFun "f" #[int, ← Srt.bool] int
+  let g ← s.declareFun "g" #[int, int, int, int] int
+  let i ← s.declareConst "i" int
+  let b ← s.declareConst "b" (← Srt.bool)
+
+  let show! (label : String) (t : Cvc.Proto2.Untyped.Term) : Env Unit := do
+    println! "{label} : {t} : {← t.getSort}"
+
+  -- the fixed-arity spelling and the array one agree
+  show! "apply2 f i b" (← apply2 f i b)
+  show! "applyN 2    " (← applyN f #[i, b])
+  -- past three arguments only `applyN` will do
+  show! "applyN 4    " (← applyN g #[i, i, i, i])
+
+/-! A *partial* application is legal: cvc5 answers a term of the remaining function sort rather
+than refusing. Too many arguments is an error, and so is none — though passing none is caught at
+elaboration rather than by cvc5.
+-/
+
+/-- info:
+partial 1 of 2 : (f i) : (-> Bool Int)
+partial 2 of 4 : (g i i) : (-> Int Int Int)
+too many       : [internal] too many arguments to operator
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Cvc.Proto2.Untyped.Solver.new
+  let int ← Srt.int
+  let f ← s.declareFun "f" #[int, ← Srt.bool] int
+  let g ← s.declareFun "g" #[int, int, int, int] int
+  let i ← s.declareConst "i" int
+  let caught (code : Env String) : Env String := try code catch e => pure s!"{e}"
+
+  println! "partial 1 of 2 : {(← applyN f #[i]) |> fun t => t} : {← (← applyN f #[i]).getSort}"
+  println! "partial 2 of 4 : {(← applyN g #[i, i])} : {← (← applyN g #[i, i]).getSort}"
+  println! "too many       : {← caught do pure s!"{← applyN f #[i, i, i]}"}"
+
+-- no arguments at all is rejected before cvc5 sees it
+/-- error: could not synthesize default value for parameter '_h' using tactics
+---
+error: failed to prove there is at least one argument
+inst✝ : Ω
+f : Untyped.Term
+⊢ 0 < #[].size
+-/
+#guard_msgs in
+example [Ω] (f : Cvc.Proto2.Untyped.Term) : Env Cvc.Proto2.Untyped.Term := applyN f #[]
+
+
+
+/-! ## Flattening
+
+Applying a term that is already an `APPLY_UF` appends to its children rather than nesting, so every
+way of reaching the same application builds the same term. Without that, an intermediate like
+`(f i)` would be *function-sorted*, and cvc5 admits those only under a higher-order logic.
+-/
+
+/-- info:
+applyN #[i,i,i] : (f i i i)
+apply3          : (f i i i)
+apply then 2    : (f i i i)
+apply x3        : (f i i i)
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Cvc.Proto2.Untyped.Solver.new
+  let int ← Srt.int
+  let f ← s.declareFun "f" #[int, int, int] int
+  let i ← s.declareConst "i" int
+
+  println! "applyN #[i,i,i] : {← applyN f #[i, i, i]}"
+  println! "apply3          : {← apply3 f i i i}"
+  -- reached in two steps, and in three
+  println! "apply then 2    : {← apply2 (← apply f i) i i}"
+  println! "apply x3        : {← apply (← apply (← apply f i) i) i}"
+
+/-! The consequence: an application built stepwise still solves under the default logic, because no
+function-sorted term is ever created.
+-/
+
+/-- info: stepwise, no logic set : sat -/
+#guard_msgs in #eval Env.runIO do
+  let s ← Cvc.Proto2.Untyped.Solver.new
+  let int ← Srt.int
+  let f ← s.declareFun "f" #[int, int] int
+  let i ← s.declareConst "i" int
+  let applied ← apply (← apply f i) i
+  (do equal applied (← mkInt 1)) >>= s.assert
+  println! "stepwise, no logic set : {if ← s.checkIsSat then "sat" else "unsat"}"

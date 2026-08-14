@@ -11,6 +11,7 @@ import all Cvc.Basic
 import all Cvc.Proto2.Env
 import all Cvc.Proto2.Srt
 import all Cvc.Proto2.Untyped.Term.Defs
+import all Cvc.Proto2.Untyped.BVar
 
 public import Cvc.Basic
 public import Cvc.Proto2.Env
@@ -273,31 +274,31 @@ def declareConst (symbol : String) (sort : Srt) (fresh : Bool := true) : Env Ter
   s.declareFun symbol #[] sort fresh
 
 @[inherit_doc S.defineFun]
-def defineFun (symbol : String) (boundVars : Terms) (sort : Srt) (body : Term)
+def defineFun (symbol : String) (bvs : BVars) (sort : Srt) (body : Term)
   (global : Bool := false)
 : Env Term :=
-  runUnsafe' do s.toUnsafe.defineFun symbol boundVars sort body global
+  runUnsafe' do s.toUnsafe.defineFun symbol bvs sort body global
 
 /-- Defines a constant symbol as the given body. -/
 def defineConst (symbol : String) (sort : Srt) (body : Term) (global : Bool := false) : Env Term :=
   s.defineFun symbol #[] sort body global
 
 @[inherit_doc S.defineFunRec]
-def defineFunRec (symbol : String) (boundVars : Terms) (sort : Srt) (body : Term)
+def defineFunRec (symbol : String) (bvs : BVars) (sort : Srt) (body : Term)
   (global : Bool := false)
 : Env Term :=
-  runUnsafe' do s.toUnsafe.defineFunRec symbol boundVars sort body global
+  runUnsafe' do s.toUnsafe.defineFunRec symbol bvs sort body global
 
 @[inherit_doc S.defineFunRecTerm]
-def defineFunRecTerm (fn : Term) (boundVars : Terms) (body : Term) (global : Bool := false)
+def defineFunRecTerm (fn : Term) (bvs : BVars) (body : Term) (global : Bool := false)
 : Env Term :=
-  runUnsafe' do s.toUnsafe.defineFunRecTerm fn boundVars body global
+  runUnsafe' do s.toUnsafe.defineFunRecTerm fn bvs body global
 
 @[inherit_doc S.defineFunsRec]
-def defineFunsRec (funs : Terms) (boundVars : Array Terms) (bodies : Terms)
+def defineFunsRec (funs : Terms) (bvs : Array BVars) (bodies : Terms)
   (global : Bool := false)
-: Env Unit :=
-  runUnsafe' do s.toUnsafe.defineFunsRec funs boundVars bodies global
+: (valid : bvs.size = bodies.size := by grind) → Env Unit := fun _ =>
+  runUnsafe' do s.toUnsafe.defineFunsRec funs bvs bodies global
 
 
 

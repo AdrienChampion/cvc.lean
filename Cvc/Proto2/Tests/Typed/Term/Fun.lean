@@ -125,3 +125,104 @@ higher-order    : (hof f)
 
   let result ← solver.checkSat (ifSat := return "sat") (ifUnsat := return "unsat")
   println! "x = y ∧ f(x) ≠ f(y) → {result}"
+
+
+
+/-! ## Applying any number of arguments
+
+`applyN` takes an `Args` spine, so the arity is not capped at the three fixed spellings. Stopping
+the spine early is a partial application, and the index the spine computes is the sort cvc5 gives.
+-/
+
+/-- info:
+apply2   : (f i b) : Int
+applyN 2 : (f i b) : Int
+applyN 4 : (g i i i i) : Int
+partial  : (f i) : (-> Bool Int)
+lambda   : (@ (@ (lambda ((x Int) (y Int)) (+ x y)) i) i) : Int
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Cvc.Proto2.Typed.Solver.new
+  let f ← s.declareFun (α := Int → Bool → Int) "f"
+  let g ← s.declareFun (α := Int → Int → Int → Int → Int) "g"
+  let i ← s.declareConst Int "i"
+  let b ← s.declareConst Bool "b"
+
+  let show! (label : String) (t : Untyped.Term) : Env Unit := do
+    println! "{label} : {t} : {← t.getSort}"
+
+  -- the fixed-arity spelling and the spine agree
+  show! "apply2  " (← apply2 f i b).erase
+  show! "applyN 2" (← applyN f (.cons i (.last b))).erase
+  -- past three arguments only the spine will do
+  show! "applyN 4" (← applyN g (.cons i (.cons i (.cons i (.last i))))).erase
+  -- stopping early leaves the rest of the arrow
+  show! "partial " (← applyN f (.last i)).erase
+
+  -- and it applies a lambda, whose index the binders determine
+  let x ← Cvc.Proto2.Typed.BVar.mk (α := Int) "x"
+  let y ← Cvc.Proto2.Typed.BVar.mk (α := Int) "y"
+  let lam ← Cvc.Proto2.Typed.BVars.lambda
+    (Cvc.Proto2.Typed.BVars.push y (Cvc.Proto2.Typed.BVars.push x []))
+    (← add x.toTerm y.toTerm)
+  show! "lambda  " (← applyN lam (.cons i (.last i))).erase
+
+section indices
+variable [Ω]
+  (f : Cvc.Proto2.Typed.Term (Int → Bool → Rat → Int))
+  (i : Cvc.Proto2.Typed.Term Int) (b : Cvc.Proto2.Typed.Term Bool)
+  (r : Cvc.Proto2.Typed.Term Rat)
+
+/-- Saturating gives the codomain. -/
+example : Env (Cvc.Proto2.Typed.Term Int) := applyN f (.cons i (.cons b (.last r)))
+/-- One argument leaves the other two. -/
+example : Env (Cvc.Proto2.Typed.Term (Bool → Rat → Int)) := applyN f (.last i)
+/-- Two leave one. -/
+example : Env (Cvc.Proto2.Typed.Term (Rat → Int)) := applyN f (.cons i (.last b))
+
+-- an argument of the wrong index is rejected
+#guard_msgs(drop error) in example := applyN f (.last b)
+-- a spine with nothing in it cannot even be written: `Args.last` carries an argument, so
+-- "at least one" is structural rather than a side condition
+
+end indices
+
+
+
+/-! ## Flattening
+
+Applying a term that is already an `APPLY_UF` appends to its children rather than nesting, which
+the typed constructors inherit from the sort-erased ones. So every spelling of the same application
+— including the `CoeFun` chain — builds one flat term, and none of them creates the function-sorted
+intermediate that would force a higher-order logic.
+-/
+
+/-- info:
+applyN     : (f i b r)
+apply3     : (f i b r)
+coe chain  : (f i b r)
+apply then : (f i b r)
+-/
+#guard_msgs in #eval Env.runIO do
+  let s ← Cvc.Proto2.Typed.Solver.new
+  let f ← s.declareFun (α := Int → Bool → Rat → Int) "f"
+  let i ← s.declareConst Int "i"
+  let b ← s.declareConst Bool "b"
+  let r ← s.declareConst Rat "r"
+
+  println! "applyN     : {(← applyN f (.cons i (.cons b (.last r)))).erase}"
+  println! "apply3     : {(← apply3 f i b r).erase}"
+  -- `f i b r` goes through the two `CoeFun` instances
+  println! "coe chain  : {(← (f i b r : Env (Cvc.Proto2.Typed.Term Int))).erase}"
+  -- and reaching it in two steps is the same term again
+  println! "apply then : {(← apply2 (← apply f i) b r).erase}"
+
+/-- info: coe chain, no logic set : sat -/
+#guard_msgs in #eval Env.runIO do
+  let s ← Cvc.Proto2.Typed.Solver.new
+  let f ← s.declareFun (α := Int → Bool → Int) "f"
+  let i ← s.declareConst Int "i"
+  let b ← s.declareConst Bool "b"
+  let applied ← f i b
+  (do equal applied (← mkInt 1)) >>= s.assert
+  println! "coe chain, no logic set : {if ← s.checkIsSat then "sat" else "unsat"}"

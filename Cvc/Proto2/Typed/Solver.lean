@@ -74,8 +74,7 @@ abbrev declareFun [ToTyp α] (symbol : String) : Env (Term α) := s.declareFun' 
 def defineFun [ToTyp β]
   (symbol : String) (bvs : BVars) (body : Term β)
 : Env (Term (bvs.signatureTo β)) := do
-  let bvs := bvs.toTerms
-  Untyped.Solver.defineFun s symbol bvs (← Srt.of β) body
+  Untyped.Solver.defineFun s symbol bvs.erase (← Srt.of β) body
 
 /-- Re-types a solver function, narrowing the terms it mentions.
 

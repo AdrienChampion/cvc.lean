@@ -33,4 +33,6 @@ public import Cvc.Proto2.Untyped.Term.Regex
 public import Cvc.Proto2.Untyped.Term.Float
 public import Cvc.Proto2.Untyped.Term.FiniteField
 public import Cvc.Proto2.Untyped.Term.Tuple
+public import Cvc.Proto2.Untyped.Term.Relation
+public import Cvc.Proto2.Untyped.Term.Table
 public import Cvc.Proto2.Untyped.Term.Fun

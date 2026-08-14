@@ -15,6 +15,7 @@ public import Cvc.Proto2.Srt
 
 namespace Cvc.Proto2 public section
 
+
 namespace Typ
 
 /-- Whether a sort is a single tuple component rather than a tuple of its own.
@@ -48,3 +49,40 @@ instance [A : ToTyp α] [B : ToTyp β] : ToTyp (α × β) where
   typ := Srt.prod A.typ B.typ
 
 end Srt
+
+
+
+/-- Lexicographic order on a pair, needed for a tuple index to sit inside a container.
+
+A relation is a `Set (Tuple …)` and a table a `Bag (Tuple …)`, so a tuple index has to be ordered
+before either can be spelled — and core provides no `Ord (α × β)`, leaving `lexOrd` as a function
+rather than an instance so that the choice of order stays the user's.
+
+Making it an instance here fixes that choice, and the choice is not idle: the comparator is a
+*type index* on `Std.TreeSet`/`Std.TreeMap`, so `Set (α × β)` means a different type under a
+different order. Lexicographic is the only order a tuple has a canonical claim to, and the
+alternative — no instance — makes relations unspellable.
+-/
+instance instOrdProd [Ord α] [Ord β] : Ord (α × β) := lexOrd
+
+/-- A tuple of one component, denoting the one-component SMT tuple sort.
+
+`α × β` describes two components or more, so nothing else in *this* encoding denotes `(Tuple α)`.
+
+The relation API no longer needs it — `Rel [] α` is the unary relation under the list-shaped index
+of `Types/Relation.lean`, which is the encoding to prefer for anything tuple-shaped. This stays for
+the product-indexed tuple API.
+
+It is a product to `Typ` like any other, so it nests as a *first* component and flattens as a
+last: `OneTuple α × β` is `(Tuple (Tuple α) β)` while `α × OneTuple β` is `(Tuple α β)`.
+-/
+structure OneTuple (α : Type) where
+  value : α
+deriving DecidableEq, Ord, Hashable
+
+namespace OneTuple
+
+instance [A : ToTyp α] : ToTyp (OneTuple α) where
+  typ := .prod [A.typ]
+
+end OneTuple

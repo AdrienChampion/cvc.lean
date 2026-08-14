@@ -7,6 +7,7 @@ Authors: Adrien Champion
 
 module
 
+import Cvc.Proto2.Tests.Logic
 import Cvc.Proto2.Tests.Srt
 import Cvc.Proto2.Tests.Signatures
 import Cvc.Proto2.Tests.Fun
@@ -24,6 +25,8 @@ import Cvc.Proto2.Tests.Untyped.Term.Regex
 import Cvc.Proto2.Tests.Untyped.Term.Float
 import Cvc.Proto2.Tests.Untyped.Term.FiniteField
 import Cvc.Proto2.Tests.Untyped.Term.Tuple
+import Cvc.Proto2.Tests.Untyped.Term.Relation
+import Cvc.Proto2.Tests.Untyped.Term.Table
 import Cvc.Proto2.Tests.Untyped.Term.Fun
 import Cvc.Proto2.Tests.Untyped.Term.Ext
 import Cvc.Proto2.Tests.Untyped.Solver
@@ -48,6 +51,8 @@ import Cvc.Proto2.Tests.Typed.Term.Regex
 import Cvc.Proto2.Tests.Typed.Term.Float
 import Cvc.Proto2.Tests.Typed.Term.FiniteField
 import Cvc.Proto2.Tests.Typed.Term.Tuple
+import Cvc.Proto2.Tests.Typed.Term.Relation
+import Cvc.Proto2.Tests.Typed.Term.Table
 import Cvc.Proto2.Tests.Typed.Term.Fun
 import Cvc.Proto2.Tests.Typed.Term.Ext
 import Cvc.Proto2.Tests.Typed.Solver
