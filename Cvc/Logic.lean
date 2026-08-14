@@ -486,49 +486,55 @@ def qf_nira := nira.qf
 def toSmtLib : Logic → String
 | self@{
   all?, ho?, qf?, sep?, array?, uf?, card?, bitVec?, ff?, float?, datatype?, string?, arith?
-} => if all? then "ALL" else Id.run do
+} => Id.run do
   let mut s := ""
   if ho? then s := s ++ "HO_"
   if qf? then s := s ++ "QF_"
-  if sep? then s := s ++ "SEP_"
-  if array? then s := s ++ if self.oneAfterArray? then "A" else "AX"
-  if uf? then s := s ++ "UF"
-  if card? then s := s ++ "C"
-  if bitVec? then s := s ++ "BV"
-  if ff? then s := s ++ "FF"
-  if float? then s := s ++ "FP"
-  if datatype? then s := s ++ "DT"
-  if string? then s := s ++ "S"
-  if let some arith := arith? then
-    s := s ++ arith.toSmtLib
-  s
+  if all? then s!"{s}ALL" else
+    if sep? then s := s ++ "SEP_"
+    if array? then s := s ++ if self.oneAfterArray? then "A" else "AX"
+    if uf? then s := s ++ "UF"
+    if card? then s := s ++ "C"
+    if bitVec? then s := s ++ "BV"
+    if ff? then s := s ++ "FF"
+    if float? then s := s ++ "FP"
+    if datatype? then s := s ++ "DT"
+    if string? then s := s ++ "S"
+    if let some arith := arith? then
+      s := s ++ arith.toSmtLib
+    s
 
 open Std.Internal.Parsec.String in
-private def parseSmtLib (thenEoi : Bool := false) : Parser Logic :=
-  .context "failed to parse SMT-LIB logic" do
-  if ← tryString "ALL" then return all
-  let mut builder1 ←
-    parseBit "HO_" .ho Builder.mk
-    >>= parseBit "QF_" .qf
-    >>= parseBit "SEP_" .sep
-  if ← tryChar 'A' then
-    builder1 := builder1.array
-    if ← tryChar 'X' then return builder1.toLogic
-  let mut builder2 ←
-    parseBit "UF" .uf builder1
-    >>= parseBit "C" .card
-    >>= parseBit "BV" .bitVec
-    >>= parseBit "FF" .ff
-    >>= parseBit "FP" .float
-    >>= parseBit "DT" .datatype
-    >>= parseBit "S" .string
-  if let some arith ← Arith.parseSmtLib? then
-    builder2 := builder2.arith arith
-  let logic := builder2.toLogic
+private def parseSmtLib (thenEoi : Bool := false) : Parser Logic := do
+  let logic ← aux
   if thenEoi then if ← not <$> .isEof then
     .fail s!"expected end-of-input after logic `{logic.toSmtLib}`"
   return logic
 where
+  aux :=
+    .context "failed to parse SMT-LIB logic" do
+    if ← tryString "ALL" then return all
+    if ← tryString "HO_ALL" then return all.ho
+    if ← tryString "QF_ALL" then return all.qf
+    if ← tryString "HO_QF_ALL" then return all.ho.qf
+    let mut builder1 ←
+      parseBit "HO_" .ho Builder.mk
+      >>= parseBit "QF_" .qf
+      >>= parseBit "SEP_" .sep
+    if ← tryChar 'A' then
+      builder1 := builder1.array
+      if ← tryChar 'X' then return builder1.toLogic
+    let mut builder2 ←
+      parseBit "UF" .uf builder1
+      >>= parseBit "C" .card
+      >>= parseBit "BV" .bitVec
+      >>= parseBit "FF" .ff
+      >>= parseBit "FP" .float
+      >>= parseBit "DT" .datatype
+      >>= parseBit "S" .string
+    if let some arith ← Arith.parseSmtLib? then
+      builder2 := builder2.arith arith
+    return builder2.toLogic
   parseBit (tag : String) (f : Builder → Builder) (builder : Builder) : Parser Builder := do
     if ← pstring tag |>.opt then return f builder else return builder
 
