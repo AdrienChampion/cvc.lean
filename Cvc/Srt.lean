@@ -105,7 +105,10 @@ def record (fields : Array (String × Srt)) : Env Srt := lift% mkRecordSort fiel
 def param (symbol : String) : Env Srt := lift% mkParamSort symbol
 
 @[inherit_doc Tm.mkUninterpretedSort]
-def uninterpreted (symbol : String) : Env Srt := lift% mkUninterpretedSort symbol
+def uninterpreted (symbol : String) : Env Srt := do
+  let u ← (lift% mkUninterpretedSort symbol)
+  registerSort symbol u
+  return u
 
 /-- A finite field sort whose size is given in the base `base`. -/
 def finiteFieldOfString (size : String) (base : UInt32 := 10) : Env Srt :=
@@ -204,7 +207,7 @@ is% isDatatypeConstructor := isDatatypeConstructor
 is% isDatatypeSelector := isDatatypeSelector
 is% isDatatypeTester := isDatatypeTester
 is% isDatatypeUpdater := isDatatypeUpdater
-is% isUninterpretedSort := isUninterpretedSort
+is% isUninterpreted := isUninterpretedSort
 is% isUninterpretedSortConstructor := isUninterpretedSortConstructor
 is% isInstantiated := isInstantiated
 
@@ -315,7 +318,7 @@ abbrev isArith : Typ → Bool
 | bool | string | regex | roundingMode
 | bitVec _ | float _ _ | finiteField _ | arrayTo _ _
 | bag _ | set _ | seq _ | prod _ | nullable _
-| datatype _ | abstract _ | function _ _ => false
+| datatype _ | abstract _ | function _ _ | uninterpreted _ => false
 
 omit [Ω] in
 theorem typs_of_isArith {typ : Typ} : typ.isArith → typ = int ∨ typ = real := by grind
@@ -326,7 +329,7 @@ abbrev hasConcat : Typ → Bool
 | bool | regex | roundingMode
 | bitVec _ | float _ _ | finiteField _ | arrayTo _ _
 | bag _ | set _ | prod _ | nullable _
-| datatype _ | abstract _ | function _ _ => false
+| datatype _ | abstract _ | function _ _ | uninterpreted _ => false
 
 omit [Ω] in
 theorem typs_of_hasConcat {typ : Typ} : typ.hasConcat → typ = string ∨ ∃ t, typ = seq t := by grind
@@ -342,16 +345,6 @@ def foldFunctionCod [Monad m] (srt' : Typ)
       f acc s (by grind only [= function.sizeOf_spec])
     return (acc, ⟨cod, by grind only [= function.sizeOf_spec]⟩)
   | cod => return (acc, ⟨cod, by grind only⟩)
-
--- /-- Helper for `toSrt`. -/
--- def foldProdArgs {α : Type} {m : Type → Type} [Monad m] (srt' : Typ)
---   (acc : α) (f : α → (s : Typ) → (sizeOf s ≤ sizeOf srt') → m α)
--- : m α :=
---   match h : srt' with
---   | prod args => do
---     let acc ← f acc fst (by grind)
---     snd.foldProdSnd acc fun acc s h => f acc s (by grind only [= prod.sizeOf_spec])
---   | rgt => f acc rgt (by grind)
 
 /-- Conversion to `Srt`. -/
 public def toSrt [Ω] : Typ → Env Srt
@@ -378,6 +371,11 @@ public def toSrt [Ω] : Typ → Env Srt
     return ⟨acc.val.push (← s.toSrt), by grind⟩
   let cod ← cod.toSrt
   Srt.function dom cod
+| uninterpreted name => do
+  let some (srt : Srt) ← getRegisteredSort? name
+    | throwUser s!"unknown uninterpreted sort `{name}`"
+  if srt.isUninterpreted then return srt
+  else throwUser s!"sort `{name}` is not an uninterpreted sort"
 where
   foldProdArgs : (l : List Typ) → (acc : Array Srt := #[]) → Env (Array Srt)
     | [], args => return args
@@ -397,26 +395,6 @@ abbrev ToTyp.srt [ToTyp α] : Env Srt := Typ.of α |>.toSrt
 @[inherit_doc ToTyp.srt]
 abbrev Srt.of (α : Type) [A : ToTyp α] : Env Srt := A.srt
 
--- namespace WithTyp
-
--- @[default_instance]
--- instance : WithTyp Bool .bool := {}
--- @[default_instance]
--- instance : WithTyp Nat .int := {}
--- @[default_instance]
--- instance : WithTyp Int .int := {}
--- @[default_instance]
--- instance : WithTyp Rat .real := {}
--- @[default_instance]
--- instance : WithTyp String .string := {}
--- @[default_instance]
--- instance : WithTyp (BitVec size) (.bitVec size) := {}
--- @[default_instance]
--- instance : WithTyp Float.RoundingMode .roundingMode := {}
--- @[default_instance]
--- instance [A : ToTyp α] : WithTyp (Array α) (.seq A.typ) := {}
-
--- end WithTyp
 
 namespace ToTyp
 
