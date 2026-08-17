@@ -57,6 +57,27 @@ def% finiteField size := mkFiniteFieldSort
 
 end
 
+/-- The sort declared under a name in this scope.
+
+A *declared* sort — a datatype, an uninterpreted sort — is fresh every time it is created, so it
+cannot be rebuilt from a description the way `Srt.int` or `Srt.set` can. `Srt.datatype` and friends
+remember theirs here, and this is how `Typ.toSrt` gets it back.
+-/
+def ofName (name : String) : Env Srt := do
+  match ← getRegisteredSort? name with
+  | some srt => return srt
+  | none => throwUser <|
+    s!"no sort named `{name}` has been declared in this scope; \
+declare the datatype before naming it"
+
+/-- Whether a sort has been declared under a name in this scope. -/
+def isDeclared (name : String) : Env Bool := do
+  return (← getRegisteredSort? name).isSome
+
+/-- Reports sort `symbol` as already declared if it is in the `Env`'s registry. -/
+def checkFreshSortSymbol (symbol : String) : Env Unit := do
+  if ← Srt.isDeclared symbol then throwUser s!"a sort named `{symbol}` is already declared"
+
 @[inherit_doc Tm.mkArraySort]
 def arrayTo (idx elm : Srt) := lift% mkArraySort idx elm
 
@@ -106,6 +127,7 @@ def param (symbol : String) : Env Srt := lift% mkParamSort symbol
 
 @[inherit_doc Tm.mkUninterpretedSort]
 def uninterpreted (symbol : String) : Env Srt := do
+  Srt.checkFreshSortSymbol symbol
   let u ← (lift% mkUninterpretedSort symbol)
   registerSort symbol u
   return u
@@ -132,23 +154,6 @@ def unresolvedDatatype (symbol : String) (arity : Nat := 0) : Env Srt :=
 A datatype sort comes from a declaration rather than from its parts, and each call creates a
 *fresh* sort even from an identical declaration — see `Cvc/Untyped/Datatype.lean`.
 -/
-
-/-- The sort declared under a name in this scope.
-
-A *declared* sort — a datatype, an uninterpreted sort — is fresh every time it is created, so it
-cannot be rebuilt from a description the way `Srt.int` or `Srt.set` can. `Srt.datatype` and friends
-remember theirs here, and this is how `Typ.toSrt` gets it back.
--/
-def ofName (name : String) : Env Srt := do
-  match ← getRegisteredSort? name with
-  | some srt => return srt
-  | none => throwUser <|
-    s!"no sort named `{name}` has been declared in this scope; \
-declare the datatype before naming it"
-
-/-- Whether a sort has been declared under a name in this scope. -/
-def isDeclared (name : String) : Env Bool := do
-  return (← getRegisteredSort? name).isSome
 
 @[inherit_doc Tm.mkDatatypeSort]
 def datatype (decl : Datatype.Decl) : Env Srt := do
