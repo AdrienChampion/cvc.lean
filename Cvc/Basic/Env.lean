@@ -10,10 +10,14 @@ module
 import all Cvc.Basic.Error
 public import Cvc.Basic.Error
 public import cvc5
+public import Std.Data.HashMap.Basic
 
 
 
 /-! # `Ω` class and environment monad
+
+The scope's state carries a **registry of declared sorts** alongside the term manager. That is what
+makes a datatype nameable by `ToTyp`: see `State`.
 
 ## `Ω` class
 
@@ -72,8 +76,25 @@ private def liftRes5 (code : Except Error5 α) : Except Error α := code.mapErro
 
 class Ω : Prop where private mk ::
 
+/-- What an `Env` threads.
+
+The term manager, plus the sorts that had to be **declared** rather than built. cvc5 makes a
+*fresh* sort every time one is declared, even from an identical declaration, so a datatype sort
+cannot be recovered by rebuilding it — see `Typ.toSrt`. Keeping it here is what lets `ToTyp` name a
+datatype: the `Typ` carries the name, and the sort is looked up.
+
+Keyed by name. Two datatypes declared under one name in the same scope therefore alias, which is
+why the declaration functions reject a name already taken.
+-/
+structure State where
+  private mk ::
+  /-- The term manager every sort and term of this scope belongs to. -/
+  private tm : Tm
+  /-- Sorts that were declared, by name. -/
+  private declaredSorts : Std.HashMap String cvc5.Sort := {}
+
 structure EnvT [Ω] (m : Type → Type) (α : Type) : Type where private mk ::
-  private runOn : StateRefT' IO.RealWorld Tm (ResT m) α
+  private runOn : StateRefT' IO.RealWorld State (ResT m) α
 
 @[expose]
 def Env [Ω] : (α : Type) → Type := EnvT BaseIO
@@ -179,7 +200,7 @@ namespace EnvT
 def run [Monad m] [MonadLiftT BaseIO m] (code : [Ω] → EnvT m α) : m (Res α) := do
   let _scope := Ω.mk
   match ← Tm.new.run with
-  | .ok tm => IO.mkRef tm >>= code.runOn
+  | .ok tm => IO.mkRef {tm} >>= code.runOn
   | .error e => return Error.ofUnsafe e |> .error
 
 end EnvT
@@ -199,7 +220,26 @@ end Env
 
 section variable [Ω]
 
-private def getManager : Env Tm := ⟨fun tmRef => tmRef.get⟩
+private def getManager : Env Tm := ⟨fun ref => return (← ref.get).tm⟩
+
+/-! ### The declared-sort registry
+
+`private`, like `runUnsafe`: only the sort layer registers and looks sorts up, and it does so
+through `Srt`-level functions that state what they mean.
+-/
+
+/-- Remembers a declared sort under a name, failing if the name is taken. -/
+private def registerSort (name : String) (srt : cvc5.Sort) : Env Unit :=
+  ⟨fun ref => do
+    let state ← ref.get
+    if state.declaredSorts.contains name then
+      throw <| .user s!"a sort named `{name}` has already been declared in this scope"
+    ref.set {state with declaredSorts := state.declaredSorts.insert name srt}⟩
+
+/-- The sort declared under a name, if any. -/
+private def getRegisteredSort? (name : String) : Env (Option cvc5.Sort) :=
+  ⟨fun ref => return (← ref.get).declaredSorts[name]?⟩
+
 
 -- private def runUnsafe [Monad m'] [MonadLiftT BaseIO m] [Monad m] [MonadLiftT m' (EnvT m)]
 --   (code : cvc5.TermManager → m' α)
