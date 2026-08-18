@@ -129,6 +129,31 @@ def mkRecord (srt : Srt) (fields : Array (String × Term)) : Env Term := do
 
   (← srt.recordCtor).apply args
 
+/-- Builds a record value whose fields may each state their sort, or leave it to their term.
+
+A field that states its sort has that sort checked against its term's, by `Term.mkRecord`; one that
+does not takes its term's own. This is what a record literal expands to, and the reason it is a
+function rather than something the expansion inlines is that a record's sort has to be built before
+any field can be checked against it.
+-/
+def mkRecordFrom (fields : Array (String × Option Srt × Term)) : Env Term := do
+  let mut srts := #[]
+  for (name, srt?, value) in fields do
+    srts := srts.push (name, ← srt?.getDM value.getSort)
+  Term.mkRecord (← Srt.record srts) (fields.map fun (name, _, value) => (name, value))
+
+/-- Checks a term against a stated sort, and answers it unchanged.
+
+What a record literal's or update's optional sort annotation expands to, where the sort is not what
+builds the record — in an update the record already has one. The message matches the typed layer's,
+which checks the same thing against the index instead.
+-/
+def checkFieldSrt (field : String) (expected : Srt) (term : Term) : Env Term := do
+  let actual ← term.getSort
+  unless actual == expected do
+    throwUser s!"field `{field}` is stated at sort `{expected}`, but its term has sort `{actual}`"
+  return term
+
 /-- Reads a field out of a record value. -/
 def recordGet (record : Term) (field : String) : Env Term := do
   let (sel, _) ← (← record.getSort).recordSelector field
@@ -187,8 +212,15 @@ instance [F : FieldAt rest name] : FieldAt (other :: rest) name := ⟨F.idx.succ
 
 namespace Fields variable [Ω] (fs : Fields names)
 
-/-- No fields at all, the fields of `{}`. -/
-def nil : Fields [] := ⟨#v[]⟩
+/-- A record has at least one field, so this is not public: `last` is where a spine starts.
+
+It stays for the recursions that take a record apart, which have an empty case whatever the
+records do.
+-/
+private def nil : Fields [] := ⟨#v[]⟩
+
+/-- A record's last field. -/
+def last (name : String) (value : Term) : Fields [name] := ⟨#v[value]⟩
 
 /-- Adds a field in front of the ones collected so far. -/
 def cons (name : String) (value : Term) (rest : Fields names) : Fields (name :: names) :=

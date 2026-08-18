@@ -222,8 +222,7 @@ after set: {a := 9, b := true}
 -/
 #guard_msgs in #eval Env.runIO do
   let fs ← do
-    pure <| Fields.nil
-      |>.cons "b" (← Term.mkBool true)
+    pure <| Fields.last "b" (← Term.mkBool true)
       |>.cons "a" (← Term.mkInt 7)
   println! "fields  : {fs}"
   println! "a       : {fs.get "a"}"
@@ -251,8 +250,7 @@ first wins : 7
 -/
 #guard_msgs in #eval Env.runIO do
   let fs ← do
-    pure <| Fields.nil
-      |>.cons "a" (← Term.mkBool true)
+    pure <| Fields.last "a" (← Term.mkBool true)
       |>.cons "a" (← Term.mkInt 7)
   println! "first wins : {fs.get "a"}"
 
@@ -271,8 +269,7 @@ just a   : {a := (a (__cvc5_record_a_Int_b_Bool_ctor 7 true))}
 #guard_msgs in #eval Env.runIO do
   let srt ← srt
   let fs ← do
-    pure <| Fields.nil
-      |>.cons "b" (← Term.mkBool true)
+    pure <| Fields.last "b" (← Term.mkBool true)
       |>.cons "a" (← Term.mkInt 7)
   let r ← Term.mkRecordOf srt fs
   println! "record   : {r}"

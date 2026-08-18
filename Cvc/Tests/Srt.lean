@@ -347,7 +347,6 @@ abstract sort deeper down, as `{s : Set ?}` does.
 -/
 
 /-- info:
-{}  →  __cvc5_record  ✓
 {a : Int}  →  __cvc5_record_a_Int  ✓
 {a : Int, b : Bool}  →  __cvc5_record_a_Int_b_Bool  ✓
 {b : Bool, a : Int}  →  __cvc5_record_b_Bool_a_Int  ✓
@@ -358,7 +357,6 @@ field order matters : true
 -/
 #guard_msgs in #eval Env.runIO do
   let cases : List Typ := [
-    .record [],
     .record [("a", .int)],
     .record [("a", .int), ("b", .bool)],
     .record [("b", .bool), ("a", .int)],
@@ -402,7 +400,6 @@ record sort back to exactly the field list that names it.
 /-- info:
 {a : Int, b : Bool}  →  __cvc5_record_a_Int_b_Bool
 round trip  : true
-empty       : __cvc5_record
 nested      : __cvc5_record_r___cvc5_record_a_Int
 in a set    : (Set __cvc5_record_a_Int)
 in an array : (Array Int __cvc5_record_a_Int)
@@ -412,19 +409,25 @@ of a set    : |__cvc5_record_s_(Set Int)|
   let srt ← Srt.of (Record [("a", Int), ("b", Bool)])
   println! "{← srt.toTyp}  →  {srt}"
   println! "round trip  : {(← srt.toTyp) == Typ.record [("a", .int), ("b", .bool)]}"
-  println! "empty       : {← Srt.of (Record [])}"
   println! "nested      : {← Srt.of (Record [("r", Record [("a", Int)])])}"
   println! "in a set    : {← Srt.of (Set (Record [("a", Int)]))}"
   println! "in an array : {← Srt.of (TotalMap Int (Record [("a", Int)]))}"
   println! "of a set    : {← Srt.of (Record [("s", Set Int)])}"
 
-/-! The index cannot say a field name is unique — that is `Srt.record`'s check, and it is where a
-duplicate is caught. -/
+/-! Neither uniqueness of field names nor non-emptiness is something the index can state; both are
+`Srt.record`'s checks, and that is where they are caught. An empty record denotes what the empty
+tuple already denotes, so it is refused rather than left as a second spelling of it. -/
 
-/-- info: duplicate : record sort has more than one field named `a` -/
+/-- info:
+duplicate : record sort has more than one field named `a`
+empty     : a record sort must have at least one field
+via Typ   : a record sort must have at least one field
+-/
 #guard_msgs in #eval Env.runIO do
   let caught (code : Env String) : Env String := try code catch e => pure s!"{e}"
   println! "duplicate : {← caught do pure s!"{← Srt.of (Record [("a", Int), ("a", Bool)])}"}"
+  println! "empty     : {← caught do pure s!"{← Srt.of (Record [])}"}"
+  println! "via Typ   : {← caught do pure s!"{← (Typ.record []).toSrt}"}"
 
 /-! ### `FieldOf` resolves a name to its type
 

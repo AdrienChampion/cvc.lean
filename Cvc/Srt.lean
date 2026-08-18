@@ -134,13 +134,22 @@ private def firstDuplicate : List String → Option String
 
 /-- A record sort, of named and ordered fields.
 
+**A record must have at least one field.** cvc5 builds the empty record sort happily, but it
+denotes what the empty tuple already denotes and nothing in SMT-LIB has a use for it, so it is
+refused here rather than left as a second spelling of the same thing.
+
 **Field names must be distinct, and this is our check, not cvc5's.** cvc5 accepts
 `{a : Int, a : Bool}` and builds a datatype carrying two selectors both named `a`, which nothing
 can then select unambiguously.
 
 The order is part of the sort: `{a : Int, b : Bool}` and `{b : Bool, a : Int}` are different.
+
+Both checks sit here rather than on the callers, so every path to a record sort inherits them —
+`Typ.toSrt` reaches cvc5 only through this function.
 -/
 def record (fields : Array (String × Srt)) : Env Srt := do
+  if fields.isEmpty then
+    throwUser "a record sort must have at least one field"
   if let some name := firstDuplicate (fields.toList.map Prod.fst) then
     throwUser s!"record sort has more than one field named `{name}`"
   lift% mkRecordSort fields

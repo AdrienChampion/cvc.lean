@@ -32,8 +32,7 @@ def caught [Ω] (code : Env String) : Env String := try code catch e => pure s!"
 
 /-- The fields of a `P`. -/
 def fields [Ω] : Env (Fields [("a", Int), ("b", Bool)]) := do
-  return Fields.nil
-    |>.cons "b" (← Term.mkBool true)
+  return Fields.last "b" (← Term.mkBool true)
     |>.cons "a" (← Term.mkInt 7)
 
 
@@ -109,7 +108,7 @@ cvc5, naming the mono-morphised datatype. -/
 
 /--
 error: Type mismatch
-  Fields.cons "a" __do_lift✝¹ (Fields.cons "b" __do_lift✝ Fields.nil)
+  Fields.cons "a" __do_lift✝¹ (Fields.last "b" __do_lift✝)
 has type
   Fields [("a", Int), ("b", Bool)]
 but is expected to have type
@@ -117,21 +116,19 @@ but is expected to have type
 -/
 #guard_msgs in
 example [Ω] : Env (Fields [("b", Bool), ("a", Int)]) := do
-  return Fields.cons "a" (← Term.mkInt 7) (Fields.cons "b" (← Term.mkBool true) Fields.nil)
+  return Fields.cons "a" (← Term.mkInt 7) (Fields.last "b" (← Term.mkBool true))
 
 /--
-error: Application type mismatch: The argument
-  Fields.nil
+error: Type mismatch
+  Fields.last "a" __do_lift✝
 has type
-  Fields []
+  Fields [("a", Int)]
 but is expected to have type
-  Fields [("b", Bool)]
-in the application
-  Fields.cons "a" __do_lift✝ Fields.nil
+  Fields [("a", Int), ("b", Bool)]
 -/
 #guard_msgs in
 example [Ω] : Env (Fields [("a", Int), ("b", Bool)]) := do
-  return Fields.cons "a" (← Term.mkInt 7) Fields.nil
+  return Fields.last "a" (← Term.mkInt 7)
 
 
 
@@ -161,8 +158,7 @@ inner a  : (a (inner (__cvc5_record_inner___cvc5_record_a_Int_b_Bool_tag_Int_cto
 -/
 #guard_msgs in #eval Env.runIO do
   let inner ← Term.mkRecord (← fields)
-  let outer ← Term.mkRecord <| Fields.nil
-    |>.cons "tag" (← Term.mkInt 1)
+  let outer ← Term.mkRecord <| Fields.last "tag" (← Term.mkInt 1)
     |>.cons "inner" inner
   println! "nested   : {← Srt.of (Record [("inner", P), ("tag", Int)])}"
   println! "inner a  : {← (← outer.recordGet "inner").recordGet "a"}"
@@ -201,7 +197,7 @@ than one field at a time.
 
 /-- `{a := 7, b := true}`, as a value. -/
 def value : Record [("a", Int), ("b", Bool)] :=
-  Record.nil |>.cons "b" true |>.cons "a" 7
+  Record.last "b" true |>.cons "a" 7
 
 /-- info: value    : {a := 7, b := true}
 a        : 7
@@ -271,7 +267,7 @@ ordered  : true
 -/
 #guard_msgs in #eval Env.runIO do
   let nested : Record [("inner", Record [("a", Int), ("b", Bool)]), ("tag", Int)] :=
-    Record.nil |>.cons "tag" 1 |>.cons "inner" value
+    Record.last "tag" 1 |>.cons "inner" value
   println! "nested   : {nested}"
   println! "inner a  : {(nested.get "inner").get "a"}"
   let term ← Term.mkValue nested

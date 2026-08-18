@@ -79,8 +79,12 @@ structure Record (fields : List (String × Type)) where
 
 namespace Record
 
-/-- The record with no fields, `{}`. -/
-def nil : Record [] := ⟨⟨⟩⟩
+/-- A record's last field, and its value.
+
+There is no empty record: `Srt.record` refuses one, so making it unrepresentable here costs
+nothing and says so a step earlier.
+-/
+def last (_name : String) (value : gamma) : Record [(_name, gamma)] := ⟨(value, ⟨⟩)⟩
 
 /-- Adds a field's value in front of the ones collected so far. -/
 def cons (_name : String) (value : gamma) (rest : Record fields)

@@ -61,8 +61,15 @@ structure Fields (fields : List (String × Type)) where
 
 namespace Fields variable (fs : Fields fields)
 
-/-- No fields at all, the fields of `{}`. -/
-def nil : Fields [] := ⟨#v[]⟩
+/-- A record has at least one field, so this is not public: `last` is where a spine starts.
+
+It stays for the recursions that take a record apart, which have an empty case whatever the
+records do.
+-/
+private def nil : Fields [] := ⟨#v[]⟩
+
+/-- A record's last field. -/
+def last (name : String) (value : Term gamma) : Fields [(name, gamma)] := ⟨#v[value.erase]⟩
 
 /-- Adds a field in front of the ones collected so far. -/
 def cons (name : String) (value : Term gamma) (rest : Fields fields)
@@ -106,6 +113,19 @@ error rather than something to check.
 -/
 def mkRecord [ToTypFields fields] (fs : Fields fields) : Env (Term (Record fields)) := do
   T.mkRecord (← Srt.of (Record fields)) fs.pairs
+
+/-- Checks a field's term against a stated sort, and answers it unchanged.
+
+What a record literal's optional sort annotation expands to. The index already fixes the sort, so
+an annotation can only confirm it — which is worth doing, since a reader of the literal takes it on
+trust.
+-/
+def checkFieldSrt [ToTyp gamma] (field : String) (expected : Srt) (term : Term gamma)
+: Env (Term gamma) := do
+  let actual ← Srt.of gamma
+  unless actual == expected do
+    throwUser s!"field `{field}` is stated at sort `{expected}`, but its term has sort `{actual}`"
+  return term
 
 /-- Reads a field out of a record value. -/
 def recordGet (record : Term (Record fields)) (name : String) [FieldOf fields name gamma]
