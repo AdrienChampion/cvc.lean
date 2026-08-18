@@ -250,11 +250,11 @@ nullary constructor and not a variable.
 
 /-- Declares a recursive list of integers, `nil | cons (head : Int) (tail : Lst)`. -/
 def declareLst [Ω] : Env Srt := do
-  let nil ← Cvc.Datatype.Constructor.Decl.mk "nil"
-  let cons ← Cvc.Datatype.Constructor.Decl.mk "cons"
+  let nil ← Cvc.Datatype.Ctor.Decl.mk "nil"
+  let cons ← Cvc.Datatype.Ctor.Decl.mk "cons"
   let cons ← (← cons.addSelector "head" (← Srt.int)).addSelectorSelf "tail"
   let decl ← Cvc.Datatype.Decl.mk "Lst"
-  Srt.datatype (← (← decl.addConstructor nil).addConstructor cons)
+  Srt.datatype (← (← decl.addCtor nil).addCtor cons)
 
 /-- info:
 match     : (match l (((cons h t) h) (nil 0)))
@@ -274,8 +274,8 @@ head of l : 7
 
   -- `l` is a one-element list, so the match takes the `cons` branch
   let dt ← lst.getDatatype
-  let nilT ← Term.applyConstructor (← (← dt.getConstructor "nil").getTerm)
-  let seven ← Term.applyConstructor (← (← dt.getConstructor "cons").getTerm)
+  let nilT ← Term.applyCtor (← (← dt.getCtorNamed "nil").getTerm)
+  let seven ← Term.applyCtor (← (← dt.getCtorNamed "cons").getTerm)
     #[← Term.mkInt 7, nilT]
   (do Term.equal l seven) >>= s.assert
   s.checkSat (ifSat := do println! "head of l : {← s.getValueAs Int m}")

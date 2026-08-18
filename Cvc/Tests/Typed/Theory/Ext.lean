@@ -296,11 +296,11 @@ instance : ToTyp Lst := ⟨.datatype "Lst"⟩
 
 /-- Declares the datatype the `Lst` index names, `nil | cons (head : Int) (tail : Lst)`. -/
 def declareLst [Ω] : Env Srt := do
-  let nil ← Cvc.Datatype.Constructor.Decl.mk "nil"
-  let cons ← Cvc.Datatype.Constructor.Decl.mk "cons"
+  let nil ← Cvc.Datatype.Ctor.Decl.mk "nil"
+  let cons ← Cvc.Datatype.Ctor.Decl.mk "cons"
   let cons ← (← cons.addSelector "head" (← Srt.int)).addSelectorSelf "tail"
   let decl ← Cvc.Datatype.Decl.mk "Lst"
-  Srt.datatype (← (← decl.addConstructor nil).addConstructor cons)
+  Srt.datatype (← (← decl.addCtor nil).addCtor cons)
 
 /-- info:
 match     : (match l (((cons h t) (+ (* h 2) 1)) (nil 0)))

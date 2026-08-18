@@ -186,8 +186,8 @@ def1% Command ← cvc5.Command
 
 def2% Datatype.Decl ← cvc5.DatatypeDecl
 def2% Datatype ← cvc5.Datatype
-def2% Datatype.Constructor.Decl ← cvc5.DatatypeConstructorDecl
-def2% Datatype.Constructor ← cvc5.DatatypeConstructor
+def2% Datatype.Ctor.Decl ← cvc5.DatatypeConstructorDecl
+def2% Datatype.Ctor ← cvc5.DatatypeConstructor
 def2% Datatype.Selector ← cvc5.DatatypeSelector
 def2% Grammar ← cvc5.Grammar
 

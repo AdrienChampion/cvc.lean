@@ -404,7 +404,7 @@ partial def expandMatchAlt (layer : Layer) (scrutId : Ident) (alt : Syntax)
         if pats.isEmpty
         then `($body >>= fun $bodyId => $acc)
         else `((fun $binders* => $body) $bvTerms* >>= fun $bodyId => $acc)
-      acc ← `($(layer.op `applyConstructor) $ctorTermId #[ $bvTerms,* ] >>= fun $patId => $acc)
+      acc ← `($(layer.op `applyCtor) $ctorTermId #[ $bvTerms,* ] >>= fun $patId => $acc)
       acc ← `(($ctorId).getTerm >>= fun $ctorTermId => $acc)
       for idx in [0 : pats.size] do
         let jdx := pats.size - 1 - idx

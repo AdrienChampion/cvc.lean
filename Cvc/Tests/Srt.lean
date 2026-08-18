@@ -297,10 +297,10 @@ datatype      : Pair → Pair ✓
 uninterpreted : Loc → Uninterpreted `Loc` ✓
 -/
 #guard_msgs in #eval Env.runIO do
-  let mk ← Cvc.Datatype.Constructor.Decl.mk "mk"
+  let mk ← Cvc.Datatype.Ctor.Decl.mk "mk"
   let mk ← mk.addSelector "fst" (← Srt.int)
   let decl ← Cvc.Datatype.Decl.mk "Pair"
-  let pair ← Srt.datatype (← decl.addConstructor mk)
+  let pair ← Srt.datatype (← decl.addCtor mk)
   let loc ← Srt.uninterpreted "Loc"
 
   let pairTyp ← pair.toTyp
@@ -392,7 +392,81 @@ via Typ.toSrt  : record sort has more than one field named `a`
 
 
 
-/-! ## `Kind`, `SortKind` and `Op` are re-exported
+/-! ## `Record`, the index a record sort is named by
+
+`Record fields` is the Lean type that denotes a record sort. Since the sort is *structural*, the
+index is canonical in both directions: `ToTyp` maps it to a `Typ.record`, and `Srt.toTyp` maps a
+record sort back to exactly the field list that names it.
+-/
+
+/-- info:
+{a : Int, b : Bool}  →  __cvc5_record_a_Int_b_Bool
+round trip  : true
+empty       : __cvc5_record
+nested      : __cvc5_record_r___cvc5_record_a_Int
+in a set    : (Set __cvc5_record_a_Int)
+in an array : (Array Int __cvc5_record_a_Int)
+of a set    : |__cvc5_record_s_(Set Int)|
+-/
+#guard_msgs in #eval Env.runIO do
+  let srt ← Srt.of (Record [("a", Int), ("b", Bool)])
+  println! "{← srt.toTyp}  →  {srt}"
+  println! "round trip  : {(← srt.toTyp) == Typ.record [("a", .int), ("b", .bool)]}"
+  println! "empty       : {← Srt.of (Record [])}"
+  println! "nested      : {← Srt.of (Record [("r", Record [("a", Int)])])}"
+  println! "in a set    : {← Srt.of (Set (Record [("a", Int)]))}"
+  println! "in an array : {← Srt.of (TotalMap Int (Record [("a", Int)]))}"
+  println! "of a set    : {← Srt.of (Record [("s", Set Int)])}"
+
+/-! The index cannot say a field name is unique — that is `Srt.record`'s check, and it is where a
+duplicate is caught. -/
+
+/-- info: duplicate : record sort has more than one field named `a` -/
+#guard_msgs in #eval Env.runIO do
+  let caught (code : Env String) : Env String := try code catch e => pure s!"{e}"
+  println! "duplicate : {← caught do pure s!"{← Srt.of (Record [("a", Int), ("a", Bool)])}"}"
+
+/-! ### `FieldOf` resolves a name to its type
+
+This is what lets a typed field access be written as a name and still answer a term at the field's
+own type: the class walks the list and the head match wins.
+-/
+
+/-- The type `FieldOf` answers for a field, so that *inference* is pinned rather than checking. -/
+abbrev fieldType (fields : List (String × Type)) (name : String) {gamma : Type}
+  [FieldOf fields name gamma] : Type := gamma
+
+example : fieldType [("a", Int), ("b", Bool)] "a" = Int := rfl
+example : fieldType [("a", Int), ("b", Bool)] "b" = Bool := rfl
+example : fieldType [("r", Record [("a", Int)])] "r" = Record [("a", Int)] := rfl
+
+/-- A duplicated name resolves to the first, matching what `Srt.record` reports — though such an
+index has no sort at all. -/
+example : fieldType [("a", Int), ("a", Bool)] "a" = Int := rfl
+
+/-! A name that is not a field has no instance, so it does not compile — and neither does a field
+asked for at the wrong type. These are stated at an explicit type rather than through `fieldType`,
+so that the message names the field list instead of a metavariable. -/
+
+/--
+error: failed to synthesize instance of type class
+  FieldOf [("a", Int), ("b", Bool)] "c" Int
+
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
+-/
+#guard_msgs in
+example : FieldOf [("a", Int), ("b", Bool)] "c" Int := inferInstance
+
+/--
+error: failed to synthesize instance of type class
+  FieldOf [("a", Int), ("b", Bool)] "a" Bool
+
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
+-/
+#guard_msgs in
+example : FieldOf [("a", Int), ("b", Bool)] "a" Bool := inferInstance
+
+ /-! ## `Kind`, `SortKind` and `Op` are re-exported
 
 Three lean-cvc5 types are used raw rather than wrapped, and re-exported so that naming one does not
 mean reaching into `cvc5`. Constructors come from dot notation on the expected type, as everywhere
