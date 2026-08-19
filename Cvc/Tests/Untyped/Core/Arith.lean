@@ -160,3 +160,46 @@ mkRealOfStr  : (/ 1 2)
   println! "mkIntOfString: {← mkIntOfString "42"}"
   println! "mkReal       : {← mkReal (2/3 : Rat)}"
   println! "mkRealOfStr  : {← mkRealOfString "1/2"}"
+
+
+/-! # The `smt!` DSL, arithmetic notation
+
+These notations come from this theory's `op%` entries and are emitted beside its constructors, so
+they exist exactly where the theory does — importing another theory alone leaves them out of the
+grammar. Their tests belong here for the same reason.
+-/
+
+open Cvc.Untyped in
+/-- info:
+add      : (+ i j)
+prec     : (+ i (* j i))
+paren    : (* (+ i j) i)
+unary -  : (- i)
+literals : (+ 3 i)
+mod      : (mod i j)
+left-assoc - : (- (- i j) i)
+real     : (/ 3 2)
+exponent : (/ 3 2000)
+in expr  : (+ (/ 3 2) (/ 5 2))
+with sym : (< r (/ 3 2))
+-/
+#guard_msgs in #eval Env.runIO do
+  let i ← mkSymbolAs Int "i"
+  let j ← mkSymbolAs Int "j"
+  let r ← mkSymbolAs Rat "r"
+
+  println! "add      : {← smt! i + j}"
+  println! "prec     : {← smt! i + j * i}"
+  println! "paren    : {← smt! (i + j) * i}"
+  println! "unary -  : {← smt! - i}"
+  println! "literals : {← smt! 3 + i}"
+  -- `%` carries the symbol Lean gives the same operation, at Lean's precedence
+  println! "mod      : {← smt! i % j}"
+  -- associativity follows the `op%` entry: `-` is `infixl`
+  println! "left-assoc - : {← smt! i - j - i}"
+  -- a decimal or exponent literal expands to `mkReal`, elaborated against its `Rat` argument, so
+  -- cvc5 prints the exact rational and never a float
+  println! "real     : {← smt! 1.5}"
+  println! "exponent : {← smt! 1.5e-3}"
+  println! "in expr  : {← smt! 1.5 + 2.5}"
+  println! "with sym : {← smt! r < 1.5}"

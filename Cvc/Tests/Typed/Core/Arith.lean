@@ -178,3 +178,57 @@ mkRealOfStr  : (/ 1 2)
   println! "mkIntOfString: {← mkIntOfString "42"}"
   println! "mkReal       : {← mkReal (2/3 : Rat)}"
   println! "mkRealOfStr  : {← mkRealOfString "1/2"}"
+
+
+/-! # The `smt!` DSL, arithmetic notation
+
+These notations come from this theory's `op%` entries and are emitted beside its constructors, so
+they exist exactly where the theory does. What the typed layer adds is the *index* the expansion
+carries, pinned by the `example`s below.
+-/
+
+open Cvc.Typed in
+/-- info:
+add      : (+ i j)
+prec     : (+ i (* j i))
+paren    : (* (+ i j) i)
+unary -  : (- i)
+literals : (+ 3 i)
+mod      : (mod i j)
+left-assoc - : (- (- i j) i)
+real     : (/ 3 2)
+exponent : (/ 3 2000)
+in expr  : (+ (/ 3 2) (/ 5 2))
+with sym : (< r (/ 3 2))
+-/
+#guard_msgs in #eval Env.runIO do
+  let i ← mkSymbolAs Int "i"
+  let j ← mkSymbolAs Int "j"
+  let r ← mkSymbolAs Rat "r"
+
+  println! "add      : {← smt! i + j}"
+  println! "prec     : {← smt! i + j * i}"
+  println! "paren    : {← smt! (i + j) * i}"
+  println! "unary -  : {← smt! - i}"
+  println! "literals : {← smt! 3 + i}"
+  println! "mod      : {← smt! i % j}"
+  println! "left-assoc - : {← smt! i - j - i}"
+  println! "real     : {← smt! 1.5}"
+  println! "exponent : {← smt! 1.5e-3}"
+  println! "in expr  : {← smt! 1.5 + 2.5}"
+  println! "with sym : {← smt! r < 1.5}"
+
+section indices
+open Cvc.Typed
+variable [Ω] (i j : Term Int) (r : Term Rat)
+
+/-- A comparison drops from `Int` to `Bool`. -/
+example : Env (Term Bool) := smt! i < j
+/-- Arithmetic stays at its operands' index. -/
+example : Env (Term Int) := smt! i + j * i
+/-- …including over the reals. -/
+example : Env (Term Rat) := smt! - r
+/-- A real literal lands at `Rat`, not at `Int`. -/
+example : Env (Term Rat) := smt! 1.5 + 2.5
+
+end indices
