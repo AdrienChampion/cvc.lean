@@ -7,14 +7,14 @@ Authors: Adrien Champion
 
 module
 
-public import Cvc.Typed.Theory.Arith
-public import Cvc.Typed.Solver
+public import Cvc.Untyped.Theory.Arith
+public import Cvc.Untyped.Solver
 
-import all Cvc.Typed.Core.Defs
+import all Cvc.Untyped.Solver
 
 
 
-namespace Cvc.Typed public section variable [Ω]
+namespace Cvc.Untyped public section variable [Ω]
 
 namespace Symbols
 
@@ -26,7 +26,7 @@ namespace Sig variable (sig : Sig)
 
 abbrev Idents : Type := sig (fun _α => String)
 
-abbrev Terms : Type := sig (Typed.Term ·)
+abbrev Terms : Type := sig (𝕂 Term)
 
 abbrev Values : Type := sig (fun α => α)
 
@@ -51,13 +51,15 @@ abbrev Idents.get := @Sig.idents
 abbrev mapM := @inst.mapM
 
 def Idents.declareIn (idents : S.Idents) (solver : Solver) : Env S.Terms :=
-  S.mapM idents solver.declareFun
+  S.mapM idents fun {α} _ _ symbol => Srt.of α >>= solver.declareFun symbol #[]
 
 def Idents.declare (idents : S.Idents) : Env S.Terms :=
-  S.mapM idents Term.mkSymbol
+  S.mapM idents fun {α} _ _ symbol => do Term.mkSymbol (← Srt.of α) symbol
 
-def Terms.getValues (terms : S.Terms) (solver : Solver) : solver.EnvSat S.Values :=
-  S.mapM terms solver.getValue
+def Terms.getValues (terms : S.Terms) (solver : Solver) : solver.EnvSat S.Values := do
+  S.mapM terms fun term => do
+    let valueTerm ← solver.getValue term
+    valueTerm.getValue
 
 end Sig
 
@@ -117,7 +119,7 @@ def declare (idents : MySymbols.Idents) : Env MySymbols.Terms :=
 
 /-- Tries to extract a satisfiable `MySymbols`-assignment in `solver`. -/
 def findCex (syms : MySymbols.Terms) (solver : Solver)
-  (assuming : Option (Typed.Terms Bool) := none)
+  (assuming : Option Untyped.Terms := none)
 : Env (Option MySymbols.Values) :=
   solver.checkSat? assuming (ifSat := syms.getValues solver)
 
@@ -156,7 +158,7 @@ def declare (idents : MySymbols.Idents) : Env MySymbols.Terms :=
 
 /-- Tries to extract a satisfiable `MySymbols`-assignment in `solver`. -/
 def findCex (syms : MySymbols.Terms) (solver : Solver)
-  (assuming : Option (Typed.Terms Bool) := none)
+  (assuming : Option Untyped.Terms := none)
 : Env (Option MySymbols.Values) :=
   solver.checkSat? assuming (ifSat := syms.getValues solver)
 
