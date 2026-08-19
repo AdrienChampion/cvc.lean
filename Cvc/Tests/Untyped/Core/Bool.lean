@@ -8,11 +8,9 @@ Authors: Adrien Champion
 module
 
 import Cvc.Untyped.Core.Bool
-import Cvc.Untyped.Core.Arith
 import Cvc.Untyped.Solver
 
 public meta import Cvc.Untyped.Core.Bool
-public meta import Cvc.Untyped.Core.Arith
 public meta import Cvc.Untyped.Solver
 
 
