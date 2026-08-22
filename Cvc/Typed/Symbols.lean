@@ -8,7 +8,6 @@ Authors: Adrien Champion
 module
 
 public meta import Cvc.Gen.Symbols
-public import Cvc.Untyped.Symbols
 public import Cvc.Typed.Theory.Arith
 public import Cvc.Typed.Solver
 

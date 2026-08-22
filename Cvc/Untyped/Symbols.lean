@@ -15,11 +15,11 @@ import all Cvc.Untyped.Solver
 
 
 
-namespace Cvc.Untyped public section variable [Ω]
+namespace Cvc.Untyped public section
 
 namespace Symbols
 
-abbrev Wrap : Type 1 := [Ω] → (α : Type) → [ToTyp α] → [TermToValue α] → Type
+abbrev Wrap : Type 1 := (α : Type) → [ToTyp α] → [TermToValue α] → Type
 
 abbrev Sig : Type 1 := Wrap → Type
 
@@ -27,11 +27,11 @@ namespace Sig variable (sig : Sig)
 
 abbrev Idents : Type := sig (fun _α => String)
 
-abbrev Terms : Type := sig (𝕂 Term)
+abbrev Terms [Ω] : Type := sig (𝕂 Term)
 
 abbrev Values : Type := sig (fun α => α)
 
-abbrev Fun : Type := sig.Terms → Term
+abbrev Fun : Type := [Ω] → sig.Terms → Env Term
 
 end Sig
 
@@ -40,12 +40,17 @@ end Symbols
 class Symbols (S : Symbols.Sig) where
   InitData : Type := Unit
   idents : InitData → S.Idents
-  mapM {W W' : Symbols.Wrap} [Monad m]
-    (s : S W) (f : [Ω] → {α : Type} → [ToTyp α] → [TermToValue α] → W α → m (W' α)) : m (S W')
+  mapM [Ω] {W W' : Symbols.Wrap} [Monad m]
+    (s : S W) (f : {α : Type} → [ToTyp α] → [TermToValue α] → W α → m (W' α)) : m (S W')
 
 section variable {S : Symbols.Sig} [inst : Symbols S]
 
 namespace Symbols
+
+abbrev Idents [Symbols S] := Sig.Idents S
+abbrev Terms [Ω] [Symbols S] := Sig.Terms S
+abbrev Values [Symbols S] := Sig.Values S
+abbrev Fun [Symbols S] := Sig.Fun S
 
 namespace Sig
 abbrev idents : inst.InitData → S.Idents := inst.idents
@@ -53,13 +58,13 @@ abbrev Idents.get := @Sig.idents
 
 abbrev mapM := @inst.mapM
 
-def Idents.declareIn (idents : S.Idents) (solver : Solver) : Env S.Terms :=
-  S.mapM idents fun _ {α} _ _ symbol => Srt.of α >>= solver.declareFun symbol #[]
+def Idents.declareIn [Ω] (idents : S.Idents) (solver : Solver) : Env S.Terms :=
+  S.mapM idents fun {α} _ _ symbol => Srt.of α >>= solver.declareFun symbol #[]
 
-def Idents.declare (idents : S.Idents) : Env S.Terms :=
-  S.mapM idents fun _ {α} _ _ symbol => do Term.mkSymbol (← Srt.of α) symbol
+def Idents.declare [Ω] (idents : S.Idents) : Env S.Terms :=
+  S.mapM idents fun {α} _ _ symbol => do Term.mkSymbol (← Srt.of α) symbol
 
-def Terms.getValues (terms : S.Terms) (solver : Solver) : solver.EnvSat S.Values := do
+def Terms.getValues [Ω] (terms : S.Terms) (solver : Solver) : solver.EnvSat S.Values := do
   S.mapM terms fun term => do
     let valueTerm ← solver.getValue term
     valueTerm.getValue
@@ -69,7 +74,8 @@ def Terms.getValues (terms : S.Terms) (solver : Solver) : solver.EnvSat S.Values
 Needs no per-`Sig` code: `mapM` is what makes it generic, so a user's symbol structure gets this
 by instancing `Symbols` and nothing else.
 -/
-def Terms.findCex (terms : S.Terms) (solver : Solver) (assuming : Option Untyped.Terms := none)
+def Terms.findCex [Ω] (terms : S.Terms) (solver : Solver)
+  (assuming : Option Untyped.Terms := none)
 : Env (Option S.Values) :=
   solver.checkSat? assuming (ifSat := terms.getValues solver)
 
@@ -104,7 +110,10 @@ scoped syntax (name := symbolsStructure) atomic((docComment)? "structure.symbols
 
 elab_rules : command
   | `($[$doc?:docComment]? structure.symbols $id where $fields*) =>
-    Cvc.Ext.elabSymbols `Cvc.Untyped #[] doc? id fields
+    Cvc.Ext.elabSymbols `Cvc.Untyped #[
+      fun id => `(command|
+        abbrev $(mkIdent (id.getId ++ `Fun)) := Cvc.Untyped.Symbols.Sig.Fun $id),
+    ] doc? id fields
 
 end
 
@@ -158,7 +167,7 @@ structure MySymbols (W : Symbols.Wrap) where
 namespace MySymbols
 
 abbrev Idents := Symbols.Sig.Idents MySymbols
-abbrev Terms := Symbols.Sig.Terms MySymbols
+abbrev Terms [Ω] := Symbols.Sig.Terms MySymbols
 abbrev Values := Symbols.Sig.Values MySymbols
 
 instance : Symbols MySymbols where
