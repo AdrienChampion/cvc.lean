@@ -65,7 +65,7 @@ end State
 
 
 def run [S : Symbols Syms]
-  (symbols : S.Idents) (constraints : [Ω] → Array (String × S.Pred))
+  (symbols : S.Idents) (constraints : Array (String × S.Pred))
 : BaseIO (Result S) := do
   let res ← Env.run do
     let state ← State.init symbols constraints
@@ -133,14 +133,14 @@ def testUnsat : IO Unit := do
   | .sat values =>
     println! "sat:\n- x := {values.x}\n- y := {values.y}\n- z := {values.z}"
   | .unsat core =>
-    println! "unsat by{core.foldl (init := "") (s!"{·}\n{·}")}"
+    println! "unsat by{core.foldl (init := "") (s!"{·}\n- {·}")}"
   | .unknown => println! "failed to reach a conclusion"
   | .error e => println! "an error occurred\n{e}"
 
 /--
 info: unsat by
-c1
-c4
+- c1
+- c4
 -/
 #guard_msgs in #eval testUnsat
 
