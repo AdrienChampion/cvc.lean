@@ -8,13 +8,42 @@ Authors: Adrien Champion
 module
 
 public meta import Cvc.Gen.Symbols
-public import Cvc.Untyped.Theory.Arith
 public import Cvc.Untyped.Solver
 
 import all Cvc.Untyped.Solver
 
 
 
+
+/-! # Symbols, sort-erased
+
+A *symbol structure* is a record of the symbols a problem is stated over, written once and read at
+three different instantiations: at identifiers (`Idents`), at terms (`Terms`) and at the Lean
+values a model gives them (`Values`). `Symbols.Wrap` is what makes one record serve all three, and
+the `Symbols` class supplies the `mapM` that walks it.
+
+**A symbol structure's whole obligation is its `Symbols` instance**, and `structure.symbols`
+generates that, so an ordinary one is written with no boilerplate at all:
+
+```lean
+structure.symbols MySymbols where
+  /-- A boolean symbol. -/
+  myBoolVar : Bool
+  /-- A real symbol. -/
+  myRealVar : Rat
+```
+
+The structure, the aliases and the instance are generated; `declare`, `getValues` and `findCex`
+are generic over the `Sig`, so they need no per-structure definition either.
+
+**`Ω` is taken only where a term is actually mentioned.** `Wrap` takes none, so `Idents` and
+`Values` take none either — only `Terms` does, along with `mapM` and the operations that build or
+read terms. A caller can therefore name a structure's identifiers and read its values outside a
+scope, entering one only to solve.
+
+Worked examples, including the hand-written path for what `structure.symbols` cannot express, are
+in `Cvc.Tests.Untyped.Symbols`.
+-/
 namespace Cvc.Untyped public section
 
 namespace Symbols
@@ -118,76 +147,3 @@ elab_rules : command
 end
 
 end
-
-
-
-/-! ## Example 1
-
-`structure.symbols` writes everything a `Symbols` instance needs, so this is the whole of it.
--/
-namespace Ex1
-
-/-- User-defined symbol structure. -/
-structure.symbols MySymbols where
-  /-- A boolean symbol. -/
-  myBoolVar : Bool
-  /-- An integer symbol. -/
-  myIntVar : Int
-  /-- A real symbol. -/
-  myRealVar : Rat
-
-/-! That is all: the structure, the `Idents`/`Terms`/`Values` aliases and the `Symbols` instance
-are generated, and `declare`/`getValues`/`findCex` are generic over the `Sig`, so they need no
-per-structure definition either.
-
-```lean
-example (idents : MySymbols.Idents) : Env MySymbols.Terms := idents.declare
-example (syms : MySymbols.Terms) (s : Solver) : Env (Option MySymbols.Values) := syms.findCex s
-```
--/
-
-end Ex1
-
-
-
-/-! ## Example 2
-
-Not everything fits `structure.symbols`, and this is what the hand-written path is for: a field
-here is an *array* of symbols rather than one, and `InitData` is the identifiers themselves rather
-than the default `Unit`. The command wraps each field in the `Wrap` and names each symbol after its
-field, so neither is expressible with it.
--/
-namespace Ex2
-
-structure MySymbols (W : Symbols.Wrap) where
-  boolVars : Array (W Bool)
-  intVars : Array (W Int)
-  realVars : Array (W Rat)
-
-namespace MySymbols
-
-abbrev Idents := Symbols.Sig.Idents MySymbols
-abbrev Terms [Ω] := Symbols.Sig.Terms MySymbols
-abbrev Values := Symbols.Sig.Values MySymbols
-
-instance : Symbols MySymbols where
-  InitData := Idents
-  idents := id
-  mapM symbols f := return {
-    boolVars := ← symbols.boolVars.mapM f
-    intVars := ← symbols.intVars.mapM f
-    realVars := ← symbols.realVars.mapM f
-  }
-
-/-! `declare` and `findCex` need no definition here at all — both are generic over the `Sig`, so
-the `Symbols` instance above is the whole of what a symbol structure has to supply:
-
-```lean
-example (idents : MySymbols.Idents) : Env MySymbols.Terms := idents.declare
-example (syms : MySymbols.Terms) (s : Solver) : Env (Option MySymbols.Values) := syms.findCex s
-```
--/
-
-end MySymbols
-
-end Ex2

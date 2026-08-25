@@ -71,3 +71,57 @@ ascribed and nothing re-typed.
   match ← syms.findCex s with
   | some v => println! "running = {v.running}, steps = {v.steps}"
   | none => println! "no model"
+
+
+/-! ## The hand-written path
+
+Not everything fits `structure.symbols`, and this is what instancing `Symbols` by hand is for: a
+field here is an *array* of symbols rather than one, and `InitData` is the identifiers themselves
+rather than the default `Unit`. The command wraps each field in the `Wrap` and names each symbol
+after its field, so neither is expressible with it.
+
+What the two paths share is the payoff: the instance is the whole obligation either way, so
+`declare`, `getValues` and `findCex` work on this structure exactly as on a generated one.
+-/
+
+namespace ByHand
+
+structure Vars (W : Symbols.Wrap) where
+  boolVars : Array (W Bool)
+  intVars : Array (W Int)
+  realVars : Array (W Rat)
+
+namespace Vars
+
+abbrev Idents := Symbols.Sig.Idents Vars
+abbrev Terms [Ω] := Symbols.Sig.Terms Vars
+abbrev Values := Symbols.Sig.Values Vars
+abbrev Fun (α : Type) := Symbols.Sig.Fun Vars α
+abbrev Pred := Symbols.Sig.Pred Vars
+
+instance : Symbols Vars where
+  InitData := Idents
+  idents := id
+  mapM symbols f := return {
+    boolVars := ← symbols.boolVars.mapM f
+    intVars := ← symbols.intVars.mapM f
+    realVars := ← symbols.realVars.mapM f
+  }
+
+end Vars
+
+/-- The generic operations apply to a hand-written structure unchanged. -/
+example (idents : Vars.Idents) : Env Vars.Terms := idents.declare
+example (syms : Vars.Terms) (s : Solver) : Env (Option Vars.Values) := syms.findCex s
+
+/-! An array-valued field means `InitData` cannot be `Unit`: there is no way to know how many
+symbols to make, so the identifiers *are* the initialisation data. -/
+
+/-- info: bools: #[b0, b1], ints: #[i0] -/
+#guard_msgs in #eval Env.runIO do
+  let idents : Vars.Idents := ⟨#["b0", "b1"], #["i0"], #[]⟩
+  -- `InitData` is `Idents` here, so `Sig.idents` is the identity and `declare` takes them directly
+  let terms : Vars.Terms ← idents.declare
+  println! "bools: {terms.boolVars}, ints: {terms.intVars}"
+
+end ByHand
