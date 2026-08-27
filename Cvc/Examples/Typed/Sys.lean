@@ -17,7 +17,7 @@ import Cvc.Typed.Theory.Arith
 namespace Cvc.Typed.Tests.Bmc variable [Ω]
 
 
-structure.symbols Sv where
+structure.stateVars Sv where
   startStop : Bool
   reset : Bool
   counting : Bool
@@ -25,7 +25,7 @@ structure.symbols Sv where
 
 def sys : Sys Sv where
   idents := Sv.idents
-  init state := smt! state.counting.get = state.startStop ∧ state.count = 0
+  init state := smt! state.counting = state.startStop ∧ state.count = 0
   next state state' := smt!
     (state'.counting = if state'.startStop then ¬ state.counting else state.counting)
     ∧ (state'.count = if state'.reset then 0 else state.count + if state'.counting then 1 else 0)
@@ -59,10 +59,10 @@ where loop {k} (bmc : Sys.Bmc Sv k) : Nat → Env Unit
     println! "cex"
     cex.2.1.iterM fun {k} values => do
       println! "- @{k} \{ \
-        cnt := {values.count.get}, \
-        cnt? := {values.counting.get}, \
-        ss := {values.startStop.get}, \
-        reset := {values.reset.get} \
+        cnt := {values.count}, \
+        cnt? := {values.counting}, \
+        ss := {values.startStop}, \
+        reset := {values.reset} \
       }"
     loop bmc n.succ
   else loop (← bmc.unroll) n

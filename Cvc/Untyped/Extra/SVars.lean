@@ -7,6 +7,7 @@ Authors: Adrien Champion
 
 module
 
+public meta import Cvc.Gen.Symbols
 public import Cvc.Untyped.Symbols
 
 
@@ -91,3 +92,27 @@ def Solver.declareSymbolsAt [Ω] [ι : SVars S]
   (s : Solver) (k : Nat) (idents : ι.Idents)
 : Env (ι.TermsAt k) :=
   idents.declareAtIn k s
+
+
+/-! ## The `structure.stateVars` command
+
+A state-variable structure is a symbols structure whose symbols are read at a *step*: `Symbol.At k`
+wraps every field, and `declareAt` names the symbol `x__@__k`. The command is
+`structure.symbols` with that in mind — each field is stored under its `raw` name and read through
+a generated projection that unwraps the `At`, so a state is written `state.count` rather than
+`state.rawCount.get`.
+-/
+
+open Lean Elab Command in
+meta section
+
+/-- Declares a state-variable structure and everything an `SVars` instance needs. -/
+scoped syntax (name := stateVarsStructure)
+  atomic((docComment)? "structure.stateVars " ident)
+  " where" withPosition((ppLine colGe Lean.Parser.Command.structSimpleBinder)+) : command
+
+elab_rules : command
+  | `($[$doc?:docComment]? structure.stateVars $id where $fields*) =>
+    Cvc.Ext.elabStateVars `Cvc.Untyped #[] doc? id fields
+
+end
