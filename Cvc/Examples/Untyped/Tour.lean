@@ -74,8 +74,10 @@ def declareLst : Env Srt := do
   let nil ← Datatype.Ctor.Decl.mk "nil"
   let cons ← Datatype.Ctor.Decl.mk "cons"
   let cons ← (← cons.addSelector "head" (← Srt.int)).addSelectorSelf "tail"
-  let decl ← Datatype.Decl.mk "Lst"
-  Srt.datatype (← (← decl.addCtor nil).addCtor cons)
+  let mut decl ← Datatype.Decl.mk "Lst"
+  decl ← decl.addCtor nil
+  decl ← decl.addCtor cons
+  Srt.datatype decl
 
 /-- info:
 value   : (cons 1 nil)
@@ -143,9 +145,9 @@ u = 0x0a#8
   let j ← s.declareConst "j" (← Srt.int)
   let u ← s.declareConst "u" (← Srt.bitVec 8)
 
-  (← smt! i + j = 10) |> s.assert
-  (← smt! i - j = 4) |> s.assert
-  (← smt! ![pure u] &&& ![Term.mkBitVec 8 0x0f] = ![Term.mkBitVec 8 0x0a]) |> s.assert
+  smt! i + j = 10 >>= s.assert
+  smt! i - j = 4 >>= s.assert
+  smt! u &&& ![Term.mkBitVec 8 0x0f] = ![Term.mkBitVec 8 0x0a] >>= s.assert
 
   s.checkSat (ifSat := do
     println! "i = {← s.getValueAs Int i}"
