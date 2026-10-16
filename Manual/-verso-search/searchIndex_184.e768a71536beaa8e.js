@@ -1,0 +1,1 @@
+window.docContents[184].resolve({"/Terms-and-Sorts/#Cvc___lean----High-Level-CVC5-API--Terms-and-Sorts":{"contents":"\n\n\n\n","context":"Cvc.lean -- High-Level CVC5 API","header":"2. Terms and Sorts","id":"/Terms-and-Sorts/#Cvc___lean----High-Level-CVC5-API--Terms-and-Sorts"}});

@@ -1,0 +1,1 @@
+window.docContents[42].resolve({"/Environment-and--___/#Cvc___lean----High-Level-CVC5-API--Environment-and--___":{"contents":"\n\n\n\n","context":"Cvc.lean -- High-Level CVC5 API","header":"1. Environment and  Ω","id":"/Environment-and--___/#Cvc___lean----High-Level-CVC5-API--Environment-and--___"}});

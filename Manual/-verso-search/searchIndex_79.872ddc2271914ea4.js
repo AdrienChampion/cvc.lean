@@ -1,0 +1,1 @@
+window.docContents[79].resolve({"/Overview/#overview":{"contents":"\n\nBefore diving into how cvc.lean works and how to use it, this section showcases different features\nso that you can get a feeling of what using cvc.lean looks like quickly.\n\n\n\n\n\n","context":"Cvc.lean -- High-Level CVC5 API","header":"1. Overview","id":"/Overview/#overview"}});

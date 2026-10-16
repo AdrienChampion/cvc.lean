@@ -1,0 +1,1 @@
+window.docContents[104].resolve({"/Terms/#Cvc___lean----High-Level-CVC5-API--Terms":{"contents":"Cvc.lean exposes two API-s for terms: Typed and Untyped.\n\n\n\n","context":"Cvc.lean -- High-Level CVC5 API","header":"3. Terms","id":"/Terms/#Cvc___lean----High-Level-CVC5-API--Terms"}});

@@ -1,0 +1,1 @@
+window.docContents[157].resolve({"/Overview/#Cvc___lean----High-Level-CVC5-API--Overview--Theories":{"contents":"","context":"Cvc.lean -- High-Level CVC5 API\u0009Overview","header":"1.4. Theories","id":"/Overview/#Cvc___lean----High-Level-CVC5-API--Overview--Theories"}});

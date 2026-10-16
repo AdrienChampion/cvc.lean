@@ -1,0 +1,1 @@
+window.docContents[79].resolve({"/Overview/#overview":{"contents":"\n\n\n\n\n\n","context":"Cvc.lean -- High-Level CVC5 API","header":"1. Overview","id":"/Overview/#overview"}});

@@ -1,0 +1,1 @@
+window.docContents[201].resolve({"/#Cvc___lean----High-Level-CVC5-API":{"contents":"Cvc.lean is a high-level Lean 4 API for the cvc5 SMT solver, built on top of the\nlean-cvc5 library.\n\n\n\n\n\n\n\n\n\n","context":"","header":"Cvc.lean -- High-Level CVC5 API","id":"/#Cvc___lean----High-Level-CVC5-API"}});

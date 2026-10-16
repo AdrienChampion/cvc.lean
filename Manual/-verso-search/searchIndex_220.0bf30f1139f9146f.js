@@ -1,0 +1,1 @@
+window.docContents[220].resolve({"/Environment/#envOverview___safetyErrors":{"contents":"\n\n\n\n","context":"Cvc.lean -- High-Level CVC5 API\u0009Environment\u0009Environment","header":"2.2.1. Ω  and  Env  safety errors","id":"/Environment/#envOverview___safetyErrors"}});
