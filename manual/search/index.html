@@ -1016,6 +1016,11 @@ default ToC width these are the old 1400px and 1500px viewport breakpoints):
   opacity: 0.5;
 }
 </style><style>
+#toc .split-toc > ol > li:not(:has(.header)),
+#toc .split-toc > ol > li:has(.header:not(.head-1)) {
+  display: none;
+}
+</style><style>
 
 .hl.lean {
   white-space: pre;
@@ -2245,7 +2250,7 @@ window.onload = async () => {
             <div class="split-toc book">
               <div class="title">
                 <label for="--verso-manual-toc-----bookRoot" class="toggle-split-toc"><input type="checkbox" class="toggle-split-toc" id="--verso-manual-toc-----bookRoot" checked="checked"></label><span class="">Table of Contents</span></div>
-              <table><tr class="numbered"><td class="num">1.</td><td><a href="Overview/#overview">Overview</a></td></tr><tr class="numbered"><td class="num">2.</td><td><a href="Environment/#envOverview">Environment</a></td></tr><tr class="numbered"><td class="num">3.</td><td><a href="Sorts/#sortsOverview">Sorts</a></td></tr><tr class="numbered"><td class="num">4.</td><td><a href="Terms/#termsOverview">Terms</a></td></tr><tr class="unnumbered"><td class="num"><td><a href="Index/#index">Index</a></td></tr></table></div>
+              <table><tr class="numbered"><td class="num">1.</td><td><a href="Overview/#overview">Overview</a></td></tr><tr class="numbered"><td class="num">2.</td><td><a href="Environment/#envOverview">Environment</a></td></tr><tr class="numbered"><td class="num">3.</td><td><a href="Sorts/#sortsOverview">Sorts</a></td></tr><tr class="numbered"><td class="num">4.</td><td><a href="Terms/#termsOverview">Terms</a></td></tr><tr class="numbered"><td class="num">5.</td><td><a href="Taking-Terms-Apart/#views">Taking Terms Apart</a></td></tr><tr class="numbered"><td class="num">6.</td><td><a href="Solver/#solver">Solver</a></td></tr><tr class="unnumbered"><td class="num"><td><a href="Index/#index">Index</a></td></tr></table></div>
             </div>
           </div>
         <div class="last"></div>

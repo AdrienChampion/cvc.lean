@@ -1017,6 +1017,11 @@ default ToC width these are the old 1400px and 1500px viewport breakpoints):
   opacity: 0.5;
 }
 </style><style>
+#toc .split-toc > ol > li:not(:has(.header)),
+#toc .split-toc > ol > li:has(.header:not(.head-1)) {
+  display: none;
+}
+</style><style>
 
 .hl.lean {
   white-space: pre;
@@ -2245,7 +2250,7 @@ window.onload = async () => {
             <div class="split-toc book">
               <div class="title">
                 <label for="--verso-manual-toc-----bookRoot" class="toggle-split-toc"><input type="checkbox" class="toggle-split-toc" id="--verso-manual-toc-----bookRoot" checked="checked"></label><span class="">Table of Contents</span></div>
-              <table><tr class="numbered"><td class="num">1.</td><td><a href="Overview/#overview">Overview</a></td></tr><tr class="numbered"><td class="num">2.</td><td><a href="Environment/#envOverview">Environment</a></td></tr><tr class="numbered"><td class="num">3.</td><td><a href="Sorts/#sortsOverview">Sorts</a></td></tr><tr class="numbered"><td class="num">4.</td><td><a href="Terms/#termsOverview">Terms</a></td></tr><tr class="current unnumbered"><td class="num"><td><a href="Index/#index">Index</a></td></tr></table></div>
+              <table><tr class="numbered"><td class="num">1.</td><td><a href="Overview/#overview">Overview</a></td></tr><tr class="numbered"><td class="num">2.</td><td><a href="Environment/#envOverview">Environment</a></td></tr><tr class="numbered"><td class="num">3.</td><td><a href="Sorts/#sortsOverview">Sorts</a></td></tr><tr class="numbered"><td class="num">4.</td><td><a href="Terms/#termsOverview">Terms</a></td></tr><tr class="numbered"><td class="num">5.</td><td><a href="Taking-Terms-Apart/#views">Taking Terms Apart</a></td></tr><tr class="numbered"><td class="num">6.</td><td><a href="Solver/#solver">Solver</a></td></tr><tr class="current unnumbered"><td class="num"><td><a href="Index/#index">Index</a></td></tr></table></div>
             <div class="split-toc">
               <div class="title">
                 <span class="no-toggle"></span><span class="unnumbered"></span><span class="current"><a href="Index/#index">Index</a></span></div>
@@ -2257,7 +2262,7 @@ window.onload = async () => {
       <div class="toc-resize-handle"></div>
       <main><div class="content-wrapper">
           <nav class="prev-next-buttons">
-            <a class="local-button active" href="Terms/#termsOverview" rel="prev" title="4. Terms"><span class="arrow">←</span><span class="where">4. Terms</span></a><div></div>
+            <a class="local-button active" href="Solver/#solver" rel="prev" title="6. Solver"><span class="arrow">←</span><span class="where">6. Solver</span></a><div></div>
             </nav>
           <section>
             <h1>
@@ -2270,13 +2275,25 @@ window.onload = async () => {
                   <li>
                     <a href="Index/#---index-hdr-A">A</a></li>
                   <li>
+                    <a href="Index/#---index-hdr-B">B</a></li>
+                  <li>
                     <a href="Index/#---index-hdr-C">C</a></li>
+                  <li>
+                    <a href="Index/#---index-hdr-D">D</a></li>
                   <li>
                     <a href="Index/#---index-hdr-E">E</a></li>
                   <li>
+                    <a href="Index/#---index-hdr-G">G</a></li>
+                  <li>
                     <a href="Index/#---index-hdr-I">I</a></li>
                   <li>
+                    <a href="Index/#---index-hdr-L">L</a></li>
+                  <li>
                     <a href="Index/#---index-hdr-M">M</a></li>
+                  <li>
+                    <a href="Index/#---index-hdr-N">N</a></li>
+                  <li>
+                    <a href="Index/#---index-hdr-S">S</a></li>
                   <li>
                     <a href="Index/#---index-hdr-T">T</a></li>
                   <li>
@@ -2323,6 +2340,30 @@ window.onload = async () => {
                         <a href="Environment/#Cvc___Srt___arrayTo"><span id="---entry-___key___---___k___-1"><code>Cvc.<wbr>Srt.<wbr>array&shy;To</code></span></a></li>
                       </ol>
                     </li>
+                  <li>
+                    <span id="---entry-assert-Cvc___Typed___Solver___assert"><code>assert</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___assert"><span id="---entry-___key___---___k___-35"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>assert</code></span></a></li>
+                      </ol>
+                    </li>
+                  </ol>
+                </div>
+              <div class="division">
+                <h2 id="---index-hdr-B">
+                  B</h2>
+                <ol>
+                  <li>
+                    <span id="---entry-BVar-Cvc___Typed___BVar"><code>BVar</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Typed___BVar"><span id="---entry-___key___---___k___-25"><code>Cvc.<wbr>Typed.<wbr>BVar</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-BVars-Cvc___Typed___BVars"><code>BVars</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Typed___BVars"><span id="---entry-___key___---___k___-26"><code>Cvc.<wbr>Typed.<wbr>BVars</code></span></a></li>
+                      </ol>
+                    </li>
                   </ol>
                 </div>
               <div class="division">
@@ -2350,19 +2391,63 @@ window.onload = async () => {
                       </ol>
                     </li>
                   <li>
+                    <a href="Terms/#Cvc___Typed___BVar"><span id="---entry-Cvc___Typed___BVar"><code>Cvc.<wbr>Typed.<wbr>BVar</code></span></a></li>
+                  <li>
+                    <a href="Terms/#Cvc___Typed___BVars"><span id="---entry-Cvc___Typed___BVars"><code>Cvc.<wbr>Typed.<wbr>BVars</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver"><span id="---entry-Cvc___Typed___Solver"><code>Cvc.<wbr>Typed.<wbr>Solver</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___EnvSat"><span id="---entry-Cvc___Typed___Solver___EnvSat"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>Env&shy;Sat</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___EnvUnknown"><span id="---entry-Cvc___Typed___Solver___EnvUnknown"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>Env&shy;Unknown</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___EnvUnsat"><span id="---entry-Cvc___Typed___Solver___EnvUnsat"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>Env&shy;Unsat</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___assert"><span id="---entry-Cvc___Typed___Solver___assert"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>assert</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___checkIsSat"><span id="---entry-Cvc___Typed___Solver___checkIsSat"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>check&shy;Is&shy;Sat</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___checkSat"><span id="---entry-Cvc___Typed___Solver___checkSat"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>check&shy;Sat</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___checkSat___"><span id="---entry-Cvc___Typed___Solver___checkSat___"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>check&shy;Sat?</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___defineFun"><span id="---entry-Cvc___Typed___Solver___defineFun"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>define&shy;Fun</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___getTimeoutCore"><span id="---entry-Cvc___Typed___Solver___getTimeoutCore"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>get&shy;Timeout&shy;Core</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___getUnsatCore"><span id="---entry-Cvc___Typed___Solver___getUnsatCore"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>get&shy;Unsat&shy;Core</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___getValue"><span id="---entry-Cvc___Typed___Solver___getValue"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>get&shy;Value</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Typed___Solver___new"><span id="---entry-Cvc___Typed___Solver___new"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>new</code></span></a></li>
+                  <li>
                     <a href="Terms/#Cvc___Typed___Term"><span id="---entry-Cvc___Typed___Term"><code>Cvc.<wbr>Typed.<wbr>Term</code></span></a></li>
                   <li>
                     <a href="Terms/#Cvc___Typed___Term___add"><span id="---entry-Cvc___Typed___Term___add"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>add</code></span></a></li>
                   <li>
                     <a href="Terms/#Cvc___Typed___Term___and"><span id="---entry-Cvc___Typed___Term___and"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>and</code></span></a></li>
                   <li>
+                    <a href="Terms/#Cvc___Typed___Term___erase"><span id="---entry-Cvc___Typed___Term___erase"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>erase</code></span></a></li>
+                  <li>
+                    <a href="Terms/#Cvc___Typed___Term___lambda"><span id="---entry-Cvc___Typed___Term___lambda"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>lambda</code></span></a></li>
+                  <li>
                     <a href="Terms/#Cvc___Typed___Term___mkBool"><span id="---entry-Cvc___Typed___Term___mkBool"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Bool</code></span></a></li>
+                  <li>
+                    <a href="Terms/#Cvc___Typed___Term___mkExists"><span id="---entry-Cvc___Typed___Term___mkExists"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Exists</code></span></a></li>
+                  <li>
+                    <a href="Terms/#Cvc___Typed___Term___mkForall"><span id="---entry-Cvc___Typed___Term___mkForall"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Forall</code></span></a></li>
                   <li>
                     <a href="Terms/#Cvc___Typed___Term___mkInt"><span id="---entry-Cvc___Typed___Term___mkInt"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Int</code></span></a></li>
                   <li>
                     <a href="Terms/#Cvc___Typed___Term___mkSymbol"><span id="---entry-Cvc___Typed___Term___mkSymbol"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Symbol</code></span></a></li>
                   <li>
                     <a href="Terms/#Cvc___Typed___Term___mkSymbolAs"><span id="---entry-Cvc___Typed___Term___mkSymbolAs"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Symbol&shy;As</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Untyped___Solver___setLogic"><span id="---entry-Cvc___Untyped___Solver___setLogic"><code>Cvc.<wbr>Untyped.<wbr>Solver.<wbr>set&shy;Logic</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Untyped___Solver___setOpt"><span id="---entry-Cvc___Untyped___Solver___setOpt"><code>Cvc.<wbr>Untyped.<wbr>Solver.<wbr>set&shy;Opt</code></span></a></li>
+                  <li>
+                    <a href="Solver/#Cvc___Untyped___Solver___setOption"><span id="---entry-Cvc___Untyped___Solver___setOption"><code>Cvc.<wbr>Untyped.<wbr>Solver.<wbr>set&shy;Option</code></span></a></li>
                   <li>
                     <a href="Terms/#Cvc___Untyped___Term"><span id="---entry-Cvc___Untyped___Term"><code>Cvc.<wbr>Untyped.<wbr>Term</code></span></a></li>
                   <li>
@@ -2372,7 +2457,45 @@ window.onload = async () => {
                   <li>
                     <a href="Terms/#Cvc___Untyped___Term___mkInt"><span id="---entry-Cvc___Untyped___Term___mkInt"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>mk&shy;Int</code></span></a></li>
                   <li>
+                    <a href="Terms/#Cvc___Untyped___Term___mkSymbol"><span id="---entry-Cvc___Untyped___Term___mkSymbol"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>mk&shy;Symbol</code></span></a></li>
+                  <li>
+                    <a href="Terms/#Cvc___Untyped___Term___mkSymbolAs"><span id="---entry-Cvc___Untyped___Term___mkSymbolAs"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>mk&shy;Symbol&shy;As</code></span></a></li>
+                  <li>
+                    <a href="Terms/#Cvc___Untyped___Term___typeCheck"><span id="---entry-Cvc___Untyped___Term___typeCheck"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>type&shy;Check</code></span></a></li>
+                  <li>
+                    <a href="Terms/#Cvc___Untyped___Term___typeCheckAs"><span id="---entry-Cvc___Untyped___Term___typeCheckAs"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>type&shy;Check&shy;As</code></span></a></li>
+                  <li>
                     <a href="Environment/#Cvc______"><span id="---entry-Cvc______"><code>Cvc.<wbr>Ω</code></span></a></li>
+                  <li>
+                    <span id="---entry-checkIsSat-Cvc___Typed___Solver___checkIsSat"><code>check&shy;Is&shy;Sat</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___checkIsSat"><span id="---entry-___key___---___k___-43"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>check&shy;Is&shy;Sat</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-checkSat-Cvc___Typed___Solver___checkSat"><code>check&shy;Sat</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___checkSat"><span id="---entry-___key___---___k___-42"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>check&shy;Sat</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-checkSat___-Cvc___Typed___Solver___checkSat___"><code>check&shy;Sat?</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___checkSat___"><span id="---entry-___key___---___k___-44"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>check&shy;Sat?</code></span></a></li>
+                      </ol>
+                    </li>
+                  </ol>
+                </div>
+              <div class="division">
+                <h2 id="---index-hdr-D">
+                  D</h2>
+                <ol>
+                  <li>
+                    <span id="---entry-defineFun-Cvc___Typed___Solver___defineFun"><code>define&shy;Fun</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___defineFun"><span id="---entry-___key___---___k___-45"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>define&shy;Fun</code></span></a></li>
+                      </ol>
+                    </li>
                   </ol>
                 </div>
               <div class="division">
@@ -2385,6 +2508,54 @@ window.onload = async () => {
                         <a href="Environment/#Cvc___Env"><span id="---entry-___key___---___k___-2"><code>Cvc.<wbr>Env</code></span></a></li>
                       </ol>
                     </li>
+                  <li>
+                    <span id="---entry-EnvSat-Cvc___Typed___Solver___EnvSat"><code>Env&shy;Sat</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___EnvSat"><span id="---entry-___key___---___k___-37"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>Env&shy;Sat</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-EnvUnknown-Cvc___Typed___Solver___EnvUnknown"><code>Env&shy;Unknown</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___EnvUnknown"><span id="---entry-___key___---___k___-41"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>Env&shy;Unknown</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-EnvUnsat-Cvc___Typed___Solver___EnvUnsat"><code>Env&shy;Unsat</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___EnvUnsat"><span id="---entry-___key___---___k___-39"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>Env&shy;Unsat</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-erase-Cvc___Typed___Term___erase"><code>erase</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Typed___Term___erase"><span id="---entry-___key___---___k___-24"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>erase</code></span></a></li>
+                      </ol>
+                    </li>
+                  </ol>
+                </div>
+              <div class="division">
+                <h2 id="---index-hdr-G">
+                  G</h2>
+                <ol>
+                  <li>
+                    <span id="---entry-getTimeoutCore-Cvc___Typed___Solver___getTimeoutCore"><code>get&shy;Timeout&shy;Core</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___getTimeoutCore"><span id="---entry-___key___---___k___-40"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>get&shy;Timeout&shy;Core</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-getUnsatCore-Cvc___Typed___Solver___getUnsatCore"><code>get&shy;Unsat&shy;Core</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___getUnsatCore"><span id="---entry-___key___---___k___-38"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>get&shy;Unsat&shy;Core</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-getValue-Cvc___Typed___Solver___getValue"><code>get&shy;Value</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___getValue"><span id="---entry-___key___---___k___-36"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>get&shy;Value</code></span></a></li>
+                      </ol>
+                    </li>
                   </ol>
                 </div>
               <div class="division">
@@ -2395,6 +2566,18 @@ window.onload = async () => {
                     <span id="---entry-IsArith-Cvc___IsArith"><code>Is&shy;Arith</code></span><ol>
                       <li>
                         <a href="Terms/#Cvc___IsArith___mk"><span id="---entry-___key___---___k___-12"><code>Cvc.<wbr>Is&shy;Arith</code></span></a></li>
+                      </ol>
+                    </li>
+                  </ol>
+                </div>
+              <div class="division">
+                <h2 id="---index-hdr-L">
+                  L</h2>
+                <ol>
+                  <li>
+                    <span id="---entry-lambda-Cvc___Typed___Term___lambda"><code>lambda</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Typed___Term___lambda"><span id="---entry-___key___---___k___-27"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>lambda</code></span></a></li>
                       </ol>
                     </li>
                   </ol>
@@ -2418,6 +2601,18 @@ window.onload = async () => {
                       </ol>
                     </li>
                   <li>
+                    <span id="---entry-mkExists-Cvc___Typed___Term___mkExists"><code>mk&shy;Exists</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Typed___Term___mkExists"><span id="---entry-___key___---___k___-29"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Exists</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-mkForall-Cvc___Typed___Term___mkForall"><code>mk&shy;Forall</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Typed___Term___mkForall"><span id="---entry-___key___---___k___-28"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Forall</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
                     <span id="---entry-mkInt-Cvc___Typed___Term___mkInt"><code>mk&shy;Int</code></span><ol>
                       <li>
                         <a href="Terms/#Cvc___Typed___Term___mkInt"><span id="---entry-___key___---___k___-9"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Int</code></span></a></li>
@@ -2436,9 +2631,63 @@ window.onload = async () => {
                       </ol>
                     </li>
                   <li>
+                    <span id="---entry-mkSymbol-Cvc___Untyped___Term___mkSymbol"><code>mk&shy;Symbol</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Untyped___Term___mkSymbol"><span id="---entry-___key___---___k___-20"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>mk&shy;Symbol</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
                     <span id="---entry-mkSymbolAs-Cvc___Typed___Term___mkSymbolAs"><code>mk&shy;Symbol&shy;As</code></span><ol>
                       <li>
                         <a href="Terms/#Cvc___Typed___Term___mkSymbolAs"><span id="---entry-___key___---___k___-15"><code>Cvc.<wbr>Typed.<wbr>Term.<wbr>mk&shy;Symbol&shy;As</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-mkSymbolAs-Cvc___Untyped___Term___mkSymbolAs"><code>mk&shy;Symbol&shy;As</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Untyped___Term___mkSymbolAs"><span id="---entry-___key___---___k___-21"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>mk&shy;Symbol&shy;As</code></span></a></li>
+                      </ol>
+                    </li>
+                  </ol>
+                </div>
+              <div class="division">
+                <h2 id="---index-hdr-N">
+                  N</h2>
+                <ol>
+                  <li>
+                    <span id="---entry-new-Cvc___Typed___Solver___new"><code>new</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver___new"><span id="---entry-___key___---___k___-31"><code>Cvc.<wbr>Typed.<wbr>Solver.<wbr>new</code></span></a></li>
+                      </ol>
+                    </li>
+                  </ol>
+                </div>
+              <div class="division">
+                <h2 id="---index-hdr-S">
+                  S</h2>
+                <ol>
+                  <li>
+                    <span id="---entry-Solver-Cvc___Typed___Solver"><code>Solver</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Typed___Solver"><span id="---entry-___key___---___k___-30"><code>Cvc.<wbr>Typed.<wbr>Solver</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-setLogic-Cvc___Untyped___Solver___setLogic"><code>set&shy;Logic</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Untyped___Solver___setLogic"><span id="---entry-___key___---___k___-32"><code>Cvc.<wbr>Untyped.<wbr>Solver.<wbr>set&shy;Logic</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-setOpt-Cvc___Untyped___Solver___setOpt"><code>set&shy;Opt</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Untyped___Solver___setOpt"><span id="---entry-___key___---___k___-34"><code>Cvc.<wbr>Untyped.<wbr>Solver.<wbr>set&shy;Opt</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-setOption-Cvc___Untyped___Solver___setOption"><code>set&shy;Option</code></span><ol>
+                      <li>
+                        <a href="Solver/#Cvc___Untyped___Solver___setOption"><span id="---entry-___key___---___k___-33"><code>Cvc.<wbr>Untyped.<wbr>Solver.<wbr>set&shy;Option</code></span></a></li>
                       </ol>
                     </li>
                   </ol>
@@ -2471,6 +2720,18 @@ window.onload = async () => {
                         <a href="Sorts/#Cvc___ToTyp___mk"><span id="---entry-___key___---___k___-5"><code>Cvc.<wbr>ToTyp.<wbr>typ</code> (class method)</span></a></li>
                       </ol>
                     </li>
+                  <li>
+                    <span id="---entry-typeCheck-Cvc___Untyped___Term___typeCheck"><code>type&shy;Check</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Untyped___Term___typeCheck"><span id="---entry-___key___---___k___-23"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>type&shy;Check</code></span></a></li>
+                      </ol>
+                    </li>
+                  <li>
+                    <span id="---entry-typeCheckAs-Cvc___Untyped___Term___typeCheckAs"><code>type&shy;Check&shy;As</code></span><ol>
+                      <li>
+                        <a href="Terms/#Cvc___Untyped___Term___typeCheckAs"><span id="---entry-___key___---___k___-22"><code>Cvc.<wbr>Untyped.<wbr>Term.<wbr>type&shy;Check&shy;As</code></span></a></li>
+                      </ol>
+                    </li>
                   </ol>
                 </div>
               <div class="division">
@@ -2488,7 +2749,7 @@ window.onload = async () => {
               </div>
             </section>
           <nav class="prev-next-buttons">
-            <a class="local-button active" href="Terms/#termsOverview" rel="prev" title="4. Terms"><span class="arrow">←</span><span class="where">4. Terms</span></a><div></div>
+            <a class="local-button active" href="Solver/#solver" rel="prev" title="6. Solver"><span class="arrow">←</span><span class="where">6. Solver</span></a><div></div>
             </nav>
           </div>
         </main></div>

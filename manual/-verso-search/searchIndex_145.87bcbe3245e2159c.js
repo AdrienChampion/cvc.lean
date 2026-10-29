@@ -1,0 +1,1 @@
+window.docContents[145].resolve({"/Index/#index":{"contents":"\n\n","context":"Cvc.lean -- High-Level API for CVC5","header":"Index","id":"/Index/#index"}});

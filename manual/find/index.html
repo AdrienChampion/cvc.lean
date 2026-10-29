@@ -1016,6 +1016,11 @@ default ToC width these are the old 1400px and 1500px viewport breakpoints):
   opacity: 0.5;
 }
 </style><style>
+#toc .split-toc > ol > li:not(:has(.header)),
+#toc .split-toc > ol > li:has(.header:not(.head-1)) {
+  display: none;
+}
+</style><style>
 
 .hl.lean {
   white-space: pre;
@@ -1888,310 +1893,24 @@ and its border extension paints the outline triangle with the box's border color
   font-size: 0.9em;
 }
 </style><script>
-      
-window.onload = async () => {
-
-    // Don't show hovers inside of closed tactic states
-    function blockedByTactic(elem) {
-      let parent = elem.parentNode;
-      while (parent && "classList" in parent) {
-        if (parent.classList.contains("tactic")) {
-          const toggle = parent.querySelector(":scope > input.tactic-toggle");
-          if (toggle) {
-            return !toggle.checked;
-          }
-        }
-        parent = parent.parentNode;
-      }
-      return false;
-    }
-
-    // The innermost element under the pointer, used to show only the most specific hover
-    let hoverTarget = null;
-    document.addEventListener('mouseover', (e) => { hoverTarget = e.target; }, true);
-
-    // Visible tippy references; a tooltip is blocked while an unrelated one is visible
-    const visibleTippies = new Set();
-    function blockedByTippy(elem) {
-      for (const ref of visibleTippies) {
-        if (!ref.contains(elem) && !elem.contains(ref)) return true;
-      }
-      return false;
-    }
-
-    // Whether the element's tooltip would have content to show. Content nested in a
-    // collapsed tactic region is covered by the region's proof-state tooltip, whether or
-    // not a tippy instance is currently attached to it.
-    function showsContent(el) {
-      if (!el._tippy) return false;
-      if (el.classList.contains('tactic')) {
-        const toggle = el.querySelector(':scope > input.tactic-toggle');
-        return !!toggle && !toggle.checked;
-      }
-      return (!!el.querySelector('.hover-info') || 'versoHover' in el.dataset) &&
-        !blockedByTactic(el);
-    }
-
-    // The nearest enclosing element whose tooltip has content
-    function innermostShowable(el) {
-      while (el && el.nodeType === Node.ELEMENT_NODE) {
-        if (showsContent(el)) return el;
-        el = el.parentElement;
-      }
-      return null;
-    }
-
-    // Binding highlights via event delegation with cached lookups
-    const bindingCache = new Map(); // context+binding -> [token elements]
-    let highlightedTokens = [];
-    function getBindingTokens(context, binding) {
-      const key = context + "\0" + binding;
-      let tokens = bindingCache.get(key);
-      if (!tokens) {
-        tokens = [];
-        for (const example of document.querySelectorAll(".hl.lean")) {
-          if (example.dataset.leanContext == context) {
-            for (const tok of example.querySelectorAll(".token[data-binding=\"" + CSS.escape(binding) + "\"]")) {
-              tokens.push(tok);
-            }
-          }
-        }
-        bindingCache.set(key, tokens);
-      }
-      return tokens;
-    }
-    for (const container of document.querySelectorAll(".hl.lean")) {
-      container.addEventListener("mouseover", (event) => {
-        const c = event.target.closest(".token");
-        if (!c || !c.dataset.binding || c.dataset.binding === "" || !container.contains(c)) return;
-        if (blockedByTactic(c)) return;
-        const tokens = getBindingTokens(container.dataset.leanContext, c.dataset.binding);
-        for (const tok of tokens) {
-          tok.classList.add("binding-hl");
-        }
-        highlightedTokens = tokens;
-      });
-      container.addEventListener("mouseout", (event) => {
-        const c = event.target.closest(".token");
-        if (!c || !container.contains(c)) return;
-        for (const tok of highlightedTokens) {
-          tok.classList.remove("binding-hl");
-        }
-        highlightedTokens = [];
-      });
-    }
-    /* Render docstrings */
-    if ('undefined' !== typeof marked) {
-        for (const d of document.querySelectorAll("code.docstring, pre.docstring")) {
-            const str = d.innerText;
-            const html = marked.parse(str);
-            const rendered = document.createElement("div");
-            rendered.classList.add("docstring");
-            rendered.innerHTML = html;
-            d.parentNode.replaceChild(rendered, d);
-        }
-    }
-    // Add hovers
-    const versoDocData = await (fetch("-verso-docs.json").then((resp) => resp.json()));
-
-    function hideParentTooltips(element) {
-      let parent = element.parentElement;
-      while (parent) {
-        const tippyInstance = parent._tippy;
-        if (tippyInstance) {
-          tippyInstance.hide();
-        }
-        parent = parent.parentElement;
-      }
-    }
-
-    function hideDescendantTooltips(element) {
-      for (const ref of visibleTippies) {
-        if (ref !== element && element.contains(ref)) {
-          ref._tippy.hide();
-        }
-      }
-    }
-
-    // Renders the documentation for a hover ID from the doc table
-    function docHoverContent(hoverId) {
-      const info = document.createElement('span');
-      info.className = 'hover-info';
-      info.style.display = 'block';
-      const data = versoDocData[hoverId];
-      if (data) {
-        info.innerHTML = data;
-        /* Render docstrings - TODO server-side */
-        if ('undefined' !== typeof marked) {
-          for (const d of info.querySelectorAll('code.docstring, pre.docstring')) {
-            const str = d.innerText;
-            const html = marked.parse(str);
-            const rendered = document.createElement('div');
-            rendered.classList.add('docstring');
-            rendered.innerHTML = html;
-            d.parentNode.replaceChild(rendered, d);
-          }
-        }
-      } else {
-        info.innerHTML = 'Failed to load doc ID: ' + hoverId;
-      }
-      return info;
-    }
-
-
-
-
-    const defaultTippyProps = {
-      /* DEBUG -- remove the space: * /
-      onHide(any) { return false; },
-      trigger: "click",
-      // */
-      /* theme: "lean", */
-      maxWidth: "none",
-      appendTo: () => document.body,
-      interactive: true,
-      delay: [100, null],
-      /* ignoreAttributes: true, */
-      followCursor: 'initial',
-      onShow(inst) {
-        const ref = inst.reference;
-        if (ref.className == 'tactic') {
-          const toggle = ref.querySelector(":scope > input.tactic-toggle");
-          if (toggle && toggle.checked) {
-            return false;
-          }
-        } else if (ref.querySelector(".hover-info") || "versoHover" in ref.dataset) {
-          if (blockedByTactic(ref)) { return false };
-        } else { // Nothing to show here!
-          return false;
-        }
-        // Show only the most specific hover under the pointer
-        if (hoverTarget && ref.contains(hoverTarget) && innermostShowable(hoverTarget) !== ref) {
-          return false;
-        }
-        hideParentTooltips(ref);
-        hideDescendantTooltips(ref);
-        if (blockedByTippy(ref)) { return false; }
-      },
-      onShown(inst) { visibleTippies.add(inst.reference); },
-      onHidden(inst) { visibleTippies.delete(inst.reference); },
-      content (tgt) {
-        const content = document.createElement("span");
-        if (tgt.className == 'tactic') {
-          const state = tgt.querySelector(":scope > .tactic-state").cloneNode(true);
-          state.style.display = "block";
-          content.appendChild(state);
-          content.style.display = "block";
-          content.className = "hl lean popup";
-        } else {
-          content.className = "hl lean";
-          content.style.display = "block";
-          content.style.maxHeight = "300px";
-          content.style.overflowY = "auto";
-          content.style.overflowX = "hidden";
-          // Messages come from the inline hover-info; documentation comes from the doc
-          // table. An element with both (a message span sharing a documented token's
-          // extent) shows both in one tooltip.
-          const hoverId = tgt.dataset.versoHover;
-          const hoverInfo = tgt.querySelector(".hover-info");
-          if (hoverInfo) {
-            content.appendChild(hoverInfo.cloneNode(true));
-          }
-          if (hoverId) {
-            // TODO stop doing an implicit conversion from string to number here
-            content.appendChild(docHoverContent(hoverId));
-          }
-          if (hoverInfo && hoverId) {
-            content.classList.add('mixed');
-          }
-          const extraLinks = tgt.dataset['versoLinks'] || tgt.parentElement.dataset['versoLinks'];
-          if (extraLinks) {
-            try {
-              const extras = JSON.parse(extraLinks);
-              const links = document.createElement('ul');
-              links.className = 'extra-doc-links';
-              extras.forEach((l) => {
-                const li = document.createElement('li');
-                li.innerHTML = "<a href=\"" + l['href'] + "\" title=\"" + l.long + "\">" + l.short + "</a>";
-                links.appendChild(li);
-              });
-              content.appendChild(links);
-            } catch (error) {
-              console.error(error);
-            }
-          }
-        }
-        return content;
-      }
-    };
-
-
-    document.querySelectorAll('.hl.lean .const.token, .hl.lean .keyword.token, .hl.lean .literal.token, .hl.lean .option.token, .hl.lean .var.token, .hl.lean .typed.token, .hl.lean .level-var, .hl.lean .level-const, .hl.lean .level-op, .hl.lean .sort').forEach(element => {
-      element.setAttribute('data-tippy-theme', 'lean');
-    });
-    document.querySelectorAll('.hl.lean .has-info.warning').forEach(element => {
-      element.setAttribute('data-tippy-theme', 'warning message');
-    });
-    document.querySelectorAll('.hl.lean .has-info.information').forEach(element => {
-      element.setAttribute('data-tippy-theme', 'info message');
-    });
-    document.querySelectorAll('.hl.lean .has-info.error').forEach(element => {
-      element.setAttribute('data-tippy-theme', 'error message');
-    });
-    document.querySelectorAll('.hl.lean .tactic').forEach(element => {
-      element.setAttribute('data-tippy-theme', 'tactic');
-    });
-    // Skip tokens inside closed tactics — they interfere with tactic tippys
-    const closedTactics = new Set();
-    document.querySelectorAll('.hl.lean .tactic').forEach(tactic => {
-      const toggle = tactic.querySelector(':scope > input.tactic-toggle');
-      if (toggle && !toggle.checked) closedTactics.add(tactic);
-    });
-    function isInsideClosedTactic(el) {
-      const tactic = el.closest('.tactic');
-      return tactic && tactic !== el && closedTactics.has(tactic);
-    }
-
-    const tokenSelector = '.hl.lean .const.token, .hl.lean .keyword.token, .hl.lean .literal.token, .hl.lean .option.token, .hl.lean .var.token, .hl.lean .typed.token, .hl.lean .has-info, .hl.lean .tactic, .hl.lean .level-var, .hl.lean .level-const, .hl.lean .level-op, .hl.lean .sort';
-    tippy(Array.from(document.querySelectorAll(tokenSelector)).filter(el => !isInsideClosedTactic(el)), defaultTippyProps);
-
-    // Create/destroy token tippys when tactic checkbox toggles
-    const tacticTippySelector = '.const.token, .keyword.token, .literal.token, .option.token, .var.token, .typed.token, .has-info, .level-var, .level-const, .level-op, .sort';
-    document.querySelectorAll('.hl.lean .tactic').forEach(tactic => {
-      const toggle = tactic.querySelector(':scope > input.tactic-toggle');
-      if (toggle) toggle.addEventListener('change', () => {
-        if (toggle.checked) {
-          closedTactics.delete(tactic);
-          tactic.querySelectorAll(tacticTippySelector).forEach(el => {
-            if (!el._tippy) {
-              tippy(el, defaultTippyProps);
-            }
-          });
-        } else {
-          closedTactics.add(tactic);
-          tactic.querySelectorAll(tacticTippySelector).forEach(el => {
-            if (el._tippy) el._tippy.destroy();
-          });
-        }
-        // The toggle changes which element's tooltip belongs to the pointer's position,
-        // but the pointer stays put, so no hover event announces the change. Show the
-        // right tooltip once the click that flipped the toggle has hidden the old one.
-        setTimeout(() => {
-          if (hoverTarget && hoverTarget.isConnected) {
-            const showable = innermostShowable(hoverTarget);
-            if (showable && showable._tippy) showable._tippy.show();
-          }
-        }, 0);
-      });
-  });
-}
-</script>
-    <script>
       window.xref = {"Verso.Genre.Manual.section":
  {"title": "Sections or chapters of the manual",
   "description": null,
   "contents":
-  {"termsOverview":
+  {"views":
+   [{"id": "views",
+     "data":
+     {"title": "Taking Terms Apart",
+      "shortTitle": null,
+      "sectionNum": "5.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"}]},
+     "address": "/Taking-Terms-Apart/"}],
+   "termsOverview":
    [{"id": "termsOverview",
      "data":
      {"title": "Terms",
@@ -2217,6 +1936,19 @@ window.onload = async () => {
         "number": null},
        {"title": "Sorts", "shortTitle": null, "number": "3"}]},
      "address": "/Sorts/"}],
+   "solver":
+   [{"id": "solver",
+     "data":
+     {"title": "Solver",
+      "shortTitle": null,
+      "sectionNum": "6.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"}]},
+     "address": "/Solver/"}],
    "overview":
    [{"id": "overview",
      "data":
@@ -2270,6 +2002,59 @@ window.onload = async () => {
         "number": null},
        {"title": "Environment", "shortTitle": null, "number": "2"}]},
      "address": "/Environment/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Untyped-to-typed":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Untyped-to-typed",
+     "data":
+     {"title": "Untyped to typed",
+      "shortTitle": null,
+      "sectionNum": "4.3.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Untyped/typed conversions",
+        "shortTitle": null,
+        "number": "3"},
+       {"title": "Untyped to typed", "shortTitle": null, "number": "1"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Typed-to-untyped":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Typed-to-untyped",
+     "data":
+     {"title": "Typed to untyped",
+      "shortTitle": null,
+      "sectionNum": "4.3.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Untyped/typed conversions",
+        "shortTitle": null,
+        "number": "3"},
+       {"title": "Typed to untyped", "shortTitle": null, "number": "2"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions",
+     "data":
+     {"title": "Untyped/typed conversions",
+      "shortTitle": null,
+      "sectionNum": "4.3.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Untyped/typed conversions",
+        "shortTitle": null,
+        "number": "3"}]},
+     "address": "/Terms/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped-Terms--Examples":
    [{"id":
      "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped-Terms--Examples",
@@ -2330,6 +2115,91 @@ window.onload = async () => {
        {"title": "Terms", "shortTitle": null, "number": "4"},
        {"title": "Typed Terms", "shortTitle": null, "number": "1"}]},
      "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Quantifiers":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Quantifiers",
+     "data":
+     {"title": "Quantifiers",
+      "shortTitle": null,
+      "sectionNum": "4.4.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Bound variables, lambdas, quantifiers",
+        "shortTitle": null,
+        "number": "4"},
+       {"title": "Quantifiers", "shortTitle": null, "number": "2"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Lambdas":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Lambdas",
+     "data":
+     {"title": "Lambdas",
+      "shortTitle": null,
+      "sectionNum": "4.4.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Bound variables, lambdas, quantifiers",
+        "shortTitle": null,
+        "number": "4"},
+       {"title": "Lambdas", "shortTitle": null, "number": "1"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers",
+     "data":
+     {"title": "Bound variables, lambdas, quantifiers",
+      "shortTitle": null,
+      "sectionNum": "4.4.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Bound variables, lambdas, quantifiers",
+        "shortTitle": null,
+        "number": "4"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--The-View-of-the-Imported-Theories":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--The-View-of-the-Imported-Theories",
+     "data":
+     {"title": "The View of the Imported Theories",
+      "shortTitle": null,
+      "sectionNum": "5.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"},
+       {"title": "The View of the Imported Theories",
+        "shortTitle": null,
+        "number": "1"}]},
+     "address": "/Taking-Terms-Apart/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--Folding-and-Rewriting":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--Folding-and-Rewriting",
+     "data":
+     {"title": "Folding and Rewriting",
+      "shortTitle": null,
+      "sectionNum": "5.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"},
+       {"title": "Folding and Rewriting", "shortTitle": null, "number": "2"}]},
+     "address": "/Taking-Terms-Apart/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Sorts--Lean-Type-to--Srt":
    [{"id": "Cvc___lean----High-Level-API-for-CVC5--Sorts--Lean-Type-to--Srt",
      "data":
@@ -2344,6 +2214,91 @@ window.onload = async () => {
        {"title": "Sorts", "shortTitle": null, "number": "3"},
        {"title": "Lean Type to  Srt", "shortTitle": null, "number": "1"}]},
      "address": "/Sorts/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--More-check-sat-functions":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--More-check-sat-functions",
+     "data":
+     {"title": "More check-sat functions",
+      "shortTitle": null,
+      "sectionNum": "6.3.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "More check-sat functions",
+        "shortTitle": null,
+        "number": "3"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols--Mutually-recursive-function-symbols":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols--Mutually-recursive-function-symbols",
+     "data":
+     {"title": "Mutually recursive function symbols",
+      "shortTitle": null,
+      "sectionNum": "6.4.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Defining (recursive) function symbols",
+        "shortTitle": null,
+        "number": "4"},
+       {"title": "Mutually recursive function symbols",
+        "shortTitle": null,
+        "number": "1"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols",
+     "data":
+     {"title": "Defining (recursive) function symbols",
+      "shortTitle": null,
+      "sectionNum": "6.4.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Defining (recursive) function symbols",
+        "shortTitle": null,
+        "number": "4"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Check-sat-and-modal-environments":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--Check-sat-and-modal-environments",
+     "data":
+     {"title": "Check-sat and modal environments",
+      "shortTitle": null,
+      "sectionNum": "6.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Check-sat and modal environments",
+        "shortTitle": null,
+        "number": "2"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Basics":
+   [{"id": "Cvc___lean----High-Level-API-for-CVC5--Solver--Basics",
+     "data":
+     {"title": "Basics",
+      "shortTitle": null,
+      "sectionNum": "6.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Basics", "shortTitle": null, "number": "1"}]},
+     "address": "/Solver/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Overview--Synthesis":
    [{"id": "Cvc___lean----High-Level-API-for-CVC5--Overview--Synthesis",
      "data":
@@ -2691,6 +2646,22 @@ window.onload = async () => {
   "description": "Documentation for Lean constants",
   "contents":
   {"Cvc.Ω": [{"id": "Cvc______", "data": null, "address": "/Environment/"}],
+   "Cvc.Untyped.Term.typeCheckAs":
+   [{"id": "Cvc___Untyped___Term___typeCheckAs",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Untyped.Term.typeCheck":
+   [{"id": "Cvc___Untyped___Term___typeCheck",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Untyped.Term.mkSymbolAs":
+   [{"id": "Cvc___Untyped___Term___mkSymbolAs",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Untyped.Term.mkSymbol":
+   [{"id": "Cvc___Untyped___Term___mkSymbol",
+     "data": null,
+     "address": "/Terms/"}],
    "Cvc.Untyped.Term.mkInt":
    [{"id": "Cvc___Untyped___Term___mkInt", "data": null, "address": "/Terms/"}],
    "Cvc.Untyped.Term.mkBool":
@@ -2701,6 +2672,18 @@ window.onload = async () => {
    [{"id": "Cvc___Untyped___Term___and", "data": null, "address": "/Terms/"}],
    "Cvc.Untyped.Term":
    [{"id": "Cvc___Untyped___Term", "data": null, "address": "/Terms/"}],
+   "Cvc.Untyped.Solver.setOption":
+   [{"id": "Cvc___Untyped___Solver___setOption",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Untyped.Solver.setOpt":
+   [{"id": "Cvc___Untyped___Solver___setOpt",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Untyped.Solver.setLogic":
+   [{"id": "Cvc___Untyped___Solver___setLogic",
+     "data": null,
+     "address": "/Solver/"}],
    "Cvc.Typed.Term.mkSymbolAs":
    [{"id": "Cvc___Typed___Term___mkSymbolAs",
      "data": null,
@@ -2711,14 +2694,78 @@ window.onload = async () => {
      "address": "/Terms/"}],
    "Cvc.Typed.Term.mkInt":
    [{"id": "Cvc___Typed___Term___mkInt", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Term.mkForall":
+   [{"id": "Cvc___Typed___Term___mkForall",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Typed.Term.mkExists":
+   [{"id": "Cvc___Typed___Term___mkExists",
+     "data": null,
+     "address": "/Terms/"}],
    "Cvc.Typed.Term.mkBool":
    [{"id": "Cvc___Typed___Term___mkBool", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Term.lambda":
+   [{"id": "Cvc___Typed___Term___lambda", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Term.erase":
+   [{"id": "Cvc___Typed___Term___erase", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.and":
    [{"id": "Cvc___Typed___Term___and", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.add":
    [{"id": "Cvc___Typed___Term___add", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term":
    [{"id": "Cvc___Typed___Term", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Solver.new":
+   [{"id": "Cvc___Typed___Solver___new", "data": null, "address": "/Solver/"}],
+   "Cvc.Typed.Solver.getValue":
+   [{"id": "Cvc___Typed___Solver___getValue",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.getUnsatCore":
+   [{"id": "Cvc___Typed___Solver___getUnsatCore",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.getTimeoutCore":
+   [{"id": "Cvc___Typed___Solver___getTimeoutCore",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.defineFun":
+   [{"id": "Cvc___Typed___Solver___defineFun",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.checkSat?":
+   [{"id": "Cvc___Typed___Solver___checkSat___",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.checkSat":
+   [{"id": "Cvc___Typed___Solver___checkSat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.checkIsSat":
+   [{"id": "Cvc___Typed___Solver___checkIsSat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.assert":
+   [{"id": "Cvc___Typed___Solver___assert",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.EnvUnsat":
+   [{"id": "Cvc___Typed___Solver___EnvUnsat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.EnvUnknown":
+   [{"id": "Cvc___Typed___Solver___EnvUnknown",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.EnvSat":
+   [{"id": "Cvc___Typed___Solver___EnvSat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver":
+   [{"id": "Cvc___Typed___Solver", "data": null, "address": "/Solver/"}],
+   "Cvc.Typed.BVars":
+   [{"id": "Cvc___Typed___BVars", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.BVar":
+   [{"id": "Cvc___Typed___BVar", "data": null, "address": "/Terms/"}],
    "Cvc.ToTyp.typ":
    [{"id": "Cvc___ToTyp___mk", "data": null, "address": "/Sorts/"}],
    "Cvc.ToTyp.mk":
@@ -2933,6 +2980,305 @@ if (paramName) {
 </script>
     <script>
       
+window.onload = async () => {
+
+    // Don't show hovers inside of closed tactic states
+    function blockedByTactic(elem) {
+      let parent = elem.parentNode;
+      while (parent && "classList" in parent) {
+        if (parent.classList.contains("tactic")) {
+          const toggle = parent.querySelector(":scope > input.tactic-toggle");
+          if (toggle) {
+            return !toggle.checked;
+          }
+        }
+        parent = parent.parentNode;
+      }
+      return false;
+    }
+
+    // The innermost element under the pointer, used to show only the most specific hover
+    let hoverTarget = null;
+    document.addEventListener('mouseover', (e) => { hoverTarget = e.target; }, true);
+
+    // Visible tippy references; a tooltip is blocked while an unrelated one is visible
+    const visibleTippies = new Set();
+    function blockedByTippy(elem) {
+      for (const ref of visibleTippies) {
+        if (!ref.contains(elem) && !elem.contains(ref)) return true;
+      }
+      return false;
+    }
+
+    // Whether the element's tooltip would have content to show. Content nested in a
+    // collapsed tactic region is covered by the region's proof-state tooltip, whether or
+    // not a tippy instance is currently attached to it.
+    function showsContent(el) {
+      if (!el._tippy) return false;
+      if (el.classList.contains('tactic')) {
+        const toggle = el.querySelector(':scope > input.tactic-toggle');
+        return !!toggle && !toggle.checked;
+      }
+      return (!!el.querySelector('.hover-info') || 'versoHover' in el.dataset) &&
+        !blockedByTactic(el);
+    }
+
+    // The nearest enclosing element whose tooltip has content
+    function innermostShowable(el) {
+      while (el && el.nodeType === Node.ELEMENT_NODE) {
+        if (showsContent(el)) return el;
+        el = el.parentElement;
+      }
+      return null;
+    }
+
+    // Binding highlights via event delegation with cached lookups
+    const bindingCache = new Map(); // context+binding -> [token elements]
+    let highlightedTokens = [];
+    function getBindingTokens(context, binding) {
+      const key = context + "\0" + binding;
+      let tokens = bindingCache.get(key);
+      if (!tokens) {
+        tokens = [];
+        for (const example of document.querySelectorAll(".hl.lean")) {
+          if (example.dataset.leanContext == context) {
+            for (const tok of example.querySelectorAll(".token[data-binding=\"" + CSS.escape(binding) + "\"]")) {
+              tokens.push(tok);
+            }
+          }
+        }
+        bindingCache.set(key, tokens);
+      }
+      return tokens;
+    }
+    for (const container of document.querySelectorAll(".hl.lean")) {
+      container.addEventListener("mouseover", (event) => {
+        const c = event.target.closest(".token");
+        if (!c || !c.dataset.binding || c.dataset.binding === "" || !container.contains(c)) return;
+        if (blockedByTactic(c)) return;
+        const tokens = getBindingTokens(container.dataset.leanContext, c.dataset.binding);
+        for (const tok of tokens) {
+          tok.classList.add("binding-hl");
+        }
+        highlightedTokens = tokens;
+      });
+      container.addEventListener("mouseout", (event) => {
+        const c = event.target.closest(".token");
+        if (!c || !container.contains(c)) return;
+        for (const tok of highlightedTokens) {
+          tok.classList.remove("binding-hl");
+        }
+        highlightedTokens = [];
+      });
+    }
+    /* Render docstrings */
+    if ('undefined' !== typeof marked) {
+        for (const d of document.querySelectorAll("code.docstring, pre.docstring")) {
+            const str = d.innerText;
+            const html = marked.parse(str);
+            const rendered = document.createElement("div");
+            rendered.classList.add("docstring");
+            rendered.innerHTML = html;
+            d.parentNode.replaceChild(rendered, d);
+        }
+    }
+    // Add hovers
+    const versoDocData = await (fetch("-verso-docs.json").then((resp) => resp.json()));
+
+    function hideParentTooltips(element) {
+      let parent = element.parentElement;
+      while (parent) {
+        const tippyInstance = parent._tippy;
+        if (tippyInstance) {
+          tippyInstance.hide();
+        }
+        parent = parent.parentElement;
+      }
+    }
+
+    function hideDescendantTooltips(element) {
+      for (const ref of visibleTippies) {
+        if (ref !== element && element.contains(ref)) {
+          ref._tippy.hide();
+        }
+      }
+    }
+
+    // Renders the documentation for a hover ID from the doc table
+    function docHoverContent(hoverId) {
+      const info = document.createElement('span');
+      info.className = 'hover-info';
+      info.style.display = 'block';
+      const data = versoDocData[hoverId];
+      if (data) {
+        info.innerHTML = data;
+        /* Render docstrings - TODO server-side */
+        if ('undefined' !== typeof marked) {
+          for (const d of info.querySelectorAll('code.docstring, pre.docstring')) {
+            const str = d.innerText;
+            const html = marked.parse(str);
+            const rendered = document.createElement('div');
+            rendered.classList.add('docstring');
+            rendered.innerHTML = html;
+            d.parentNode.replaceChild(rendered, d);
+          }
+        }
+      } else {
+        info.innerHTML = 'Failed to load doc ID: ' + hoverId;
+      }
+      return info;
+    }
+
+
+
+
+    const defaultTippyProps = {
+      /* DEBUG -- remove the space: * /
+      onHide(any) { return false; },
+      trigger: "click",
+      // */
+      /* theme: "lean", */
+      maxWidth: "none",
+      appendTo: () => document.body,
+      interactive: true,
+      delay: [100, null],
+      /* ignoreAttributes: true, */
+      followCursor: 'initial',
+      onShow(inst) {
+        const ref = inst.reference;
+        if (ref.className == 'tactic') {
+          const toggle = ref.querySelector(":scope > input.tactic-toggle");
+          if (toggle && toggle.checked) {
+            return false;
+          }
+        } else if (ref.querySelector(".hover-info") || "versoHover" in ref.dataset) {
+          if (blockedByTactic(ref)) { return false };
+        } else { // Nothing to show here!
+          return false;
+        }
+        // Show only the most specific hover under the pointer
+        if (hoverTarget && ref.contains(hoverTarget) && innermostShowable(hoverTarget) !== ref) {
+          return false;
+        }
+        hideParentTooltips(ref);
+        hideDescendantTooltips(ref);
+        if (blockedByTippy(ref)) { return false; }
+      },
+      onShown(inst) { visibleTippies.add(inst.reference); },
+      onHidden(inst) { visibleTippies.delete(inst.reference); },
+      content (tgt) {
+        const content = document.createElement("span");
+        if (tgt.className == 'tactic') {
+          const state = tgt.querySelector(":scope > .tactic-state").cloneNode(true);
+          state.style.display = "block";
+          content.appendChild(state);
+          content.style.display = "block";
+          content.className = "hl lean popup";
+        } else {
+          content.className = "hl lean";
+          content.style.display = "block";
+          content.style.maxHeight = "300px";
+          content.style.overflowY = "auto";
+          content.style.overflowX = "hidden";
+          // Messages come from the inline hover-info; documentation comes from the doc
+          // table. An element with both (a message span sharing a documented token's
+          // extent) shows both in one tooltip.
+          const hoverId = tgt.dataset.versoHover;
+          const hoverInfo = tgt.querySelector(".hover-info");
+          if (hoverInfo) {
+            content.appendChild(hoverInfo.cloneNode(true));
+          }
+          if (hoverId) {
+            // TODO stop doing an implicit conversion from string to number here
+            content.appendChild(docHoverContent(hoverId));
+          }
+          if (hoverInfo && hoverId) {
+            content.classList.add('mixed');
+          }
+          const extraLinks = tgt.dataset['versoLinks'] || tgt.parentElement.dataset['versoLinks'];
+          if (extraLinks) {
+            try {
+              const extras = JSON.parse(extraLinks);
+              const links = document.createElement('ul');
+              links.className = 'extra-doc-links';
+              extras.forEach((l) => {
+                const li = document.createElement('li');
+                li.innerHTML = "<a href=\"" + l['href'] + "\" title=\"" + l.long + "\">" + l.short + "</a>";
+                links.appendChild(li);
+              });
+              content.appendChild(links);
+            } catch (error) {
+              console.error(error);
+            }
+          }
+        }
+        return content;
+      }
+    };
+
+
+    document.querySelectorAll('.hl.lean .const.token, .hl.lean .keyword.token, .hl.lean .literal.token, .hl.lean .option.token, .hl.lean .var.token, .hl.lean .typed.token, .hl.lean .level-var, .hl.lean .level-const, .hl.lean .level-op, .hl.lean .sort').forEach(element => {
+      element.setAttribute('data-tippy-theme', 'lean');
+    });
+    document.querySelectorAll('.hl.lean .has-info.warning').forEach(element => {
+      element.setAttribute('data-tippy-theme', 'warning message');
+    });
+    document.querySelectorAll('.hl.lean .has-info.information').forEach(element => {
+      element.setAttribute('data-tippy-theme', 'info message');
+    });
+    document.querySelectorAll('.hl.lean .has-info.error').forEach(element => {
+      element.setAttribute('data-tippy-theme', 'error message');
+    });
+    document.querySelectorAll('.hl.lean .tactic').forEach(element => {
+      element.setAttribute('data-tippy-theme', 'tactic');
+    });
+    // Skip tokens inside closed tactics — they interfere with tactic tippys
+    const closedTactics = new Set();
+    document.querySelectorAll('.hl.lean .tactic').forEach(tactic => {
+      const toggle = tactic.querySelector(':scope > input.tactic-toggle');
+      if (toggle && !toggle.checked) closedTactics.add(tactic);
+    });
+    function isInsideClosedTactic(el) {
+      const tactic = el.closest('.tactic');
+      return tactic && tactic !== el && closedTactics.has(tactic);
+    }
+
+    const tokenSelector = '.hl.lean .const.token, .hl.lean .keyword.token, .hl.lean .literal.token, .hl.lean .option.token, .hl.lean .var.token, .hl.lean .typed.token, .hl.lean .has-info, .hl.lean .tactic, .hl.lean .level-var, .hl.lean .level-const, .hl.lean .level-op, .hl.lean .sort';
+    tippy(Array.from(document.querySelectorAll(tokenSelector)).filter(el => !isInsideClosedTactic(el)), defaultTippyProps);
+
+    // Create/destroy token tippys when tactic checkbox toggles
+    const tacticTippySelector = '.const.token, .keyword.token, .literal.token, .option.token, .var.token, .typed.token, .has-info, .level-var, .level-const, .level-op, .sort';
+    document.querySelectorAll('.hl.lean .tactic').forEach(tactic => {
+      const toggle = tactic.querySelector(':scope > input.tactic-toggle');
+      if (toggle) toggle.addEventListener('change', () => {
+        if (toggle.checked) {
+          closedTactics.delete(tactic);
+          tactic.querySelectorAll(tacticTippySelector).forEach(el => {
+            if (!el._tippy) {
+              tippy(el, defaultTippyProps);
+            }
+          });
+        } else {
+          closedTactics.add(tactic);
+          tactic.querySelectorAll(tacticTippySelector).forEach(el => {
+            if (el._tippy) el._tippy.destroy();
+          });
+        }
+        // The toggle changes which element's tooltip belongs to the pointer's position,
+        // but the pointer stays put, so no hover event announces the change. Show the
+        // right tooltip once the click that flipped the toggle has hidden the old one.
+        setTimeout(() => {
+          if (hoverTarget && hoverTarget.isConnected) {
+            const showable = innermostShowable(hoverTarget);
+            if (showable && showable._tippy) showable._tippy.show();
+          }
+        }, 0);
+      });
+  });
+}
+</script>
+    <script>
+      
 (() => {
   const setupHover = () => {
     document.querySelectorAll(".marginalia-reference").forEach(reference => {
@@ -2989,7 +3335,7 @@ if (paramName) {
             <div class="split-toc book">
               <div class="title">
                 <label for="--verso-manual-toc-----bookRoot" class="toggle-split-toc"><input type="checkbox" class="toggle-split-toc" id="--verso-manual-toc-----bookRoot" checked="checked"></label><span class="">Table of Contents</span></div>
-              <table><tr class="numbered"><td class="num">1.</td><td><a href="Overview/#overview">Overview</a></td></tr><tr class="numbered"><td class="num">2.</td><td><a href="Environment/#envOverview">Environment</a></td></tr><tr class="numbered"><td class="num">3.</td><td><a href="Sorts/#sortsOverview">Sorts</a></td></tr><tr class="numbered"><td class="num">4.</td><td><a href="Terms/#termsOverview">Terms</a></td></tr><tr class="unnumbered"><td class="num"><td><a href="Index/#index">Index</a></td></tr></table></div>
+              <table><tr class="numbered"><td class="num">1.</td><td><a href="Overview/#overview">Overview</a></td></tr><tr class="numbered"><td class="num">2.</td><td><a href="Environment/#envOverview">Environment</a></td></tr><tr class="numbered"><td class="num">3.</td><td><a href="Sorts/#sortsOverview">Sorts</a></td></tr><tr class="numbered"><td class="num">4.</td><td><a href="Terms/#termsOverview">Terms</a></td></tr><tr class="numbered"><td class="num">5.</td><td><a href="Taking-Terms-Apart/#views">Taking Terms Apart</a></td></tr><tr class="numbered"><td class="num">6.</td><td><a href="Solver/#solver">Solver</a></td></tr><tr class="unnumbered"><td class="num"><td><a href="Index/#index">Index</a></td></tr></table></div>
             </div>
           </div>
         <div class="last"></div>

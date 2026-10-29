@@ -1,0 +1,1 @@
+window.docContents[151].resolve({"/Solver/#solver":{"contents":"","context":"Cvc.lean -- High-Level API for CVC5","header":"6. Solver","id":"/Solver/#solver"}});

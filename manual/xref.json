@@ -2,7 +2,20 @@
  {"title": "Sections or chapters of the manual",
   "description": null,
   "contents":
-  {"termsOverview":
+  {"views":
+   [{"id": "views",
+     "data":
+     {"title": "Taking Terms Apart",
+      "shortTitle": null,
+      "sectionNum": "5.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"}]},
+     "address": "/Taking-Terms-Apart/"}],
+   "termsOverview":
    [{"id": "termsOverview",
      "data":
      {"title": "Terms",
@@ -28,6 +41,19 @@
         "number": null},
        {"title": "Sorts", "shortTitle": null, "number": "3"}]},
      "address": "/Sorts/"}],
+   "solver":
+   [{"id": "solver",
+     "data":
+     {"title": "Solver",
+      "shortTitle": null,
+      "sectionNum": "6.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"}]},
+     "address": "/Solver/"}],
    "overview":
    [{"id": "overview",
      "data":
@@ -81,6 +107,59 @@
         "number": null},
        {"title": "Environment", "shortTitle": null, "number": "2"}]},
      "address": "/Environment/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Untyped-to-typed":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Untyped-to-typed",
+     "data":
+     {"title": "Untyped to typed",
+      "shortTitle": null,
+      "sectionNum": "4.3.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Untyped/typed conversions",
+        "shortTitle": null,
+        "number": "3"},
+       {"title": "Untyped to typed", "shortTitle": null, "number": "1"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Typed-to-untyped":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions--Typed-to-untyped",
+     "data":
+     {"title": "Typed to untyped",
+      "shortTitle": null,
+      "sectionNum": "4.3.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Untyped/typed conversions",
+        "shortTitle": null,
+        "number": "3"},
+       {"title": "Typed to untyped", "shortTitle": null, "number": "2"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped___typed-conversions",
+     "data":
+     {"title": "Untyped/typed conversions",
+      "shortTitle": null,
+      "sectionNum": "4.3.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Untyped/typed conversions",
+        "shortTitle": null,
+        "number": "3"}]},
+     "address": "/Terms/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped-Terms--Examples":
    [{"id":
      "Cvc___lean----High-Level-API-for-CVC5--Terms--Untyped-Terms--Examples",
@@ -141,6 +220,91 @@
        {"title": "Terms", "shortTitle": null, "number": "4"},
        {"title": "Typed Terms", "shortTitle": null, "number": "1"}]},
      "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Quantifiers":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Quantifiers",
+     "data":
+     {"title": "Quantifiers",
+      "shortTitle": null,
+      "sectionNum": "4.4.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Bound variables, lambdas, quantifiers",
+        "shortTitle": null,
+        "number": "4"},
+       {"title": "Quantifiers", "shortTitle": null, "number": "2"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Lambdas":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Lambdas",
+     "data":
+     {"title": "Lambdas",
+      "shortTitle": null,
+      "sectionNum": "4.4.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Bound variables, lambdas, quantifiers",
+        "shortTitle": null,
+        "number": "4"},
+       {"title": "Lambdas", "shortTitle": null, "number": "1"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers",
+     "data":
+     {"title": "Bound variables, lambdas, quantifiers",
+      "shortTitle": null,
+      "sectionNum": "4.4.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Bound variables, lambdas, quantifiers",
+        "shortTitle": null,
+        "number": "4"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--The-View-of-the-Imported-Theories":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--The-View-of-the-Imported-Theories",
+     "data":
+     {"title": "The View of the Imported Theories",
+      "shortTitle": null,
+      "sectionNum": "5.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"},
+       {"title": "The View of the Imported Theories",
+        "shortTitle": null,
+        "number": "1"}]},
+     "address": "/Taking-Terms-Apart/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--Folding-and-Rewriting":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--Folding-and-Rewriting",
+     "data":
+     {"title": "Folding and Rewriting",
+      "shortTitle": null,
+      "sectionNum": "5.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"},
+       {"title": "Folding and Rewriting", "shortTitle": null, "number": "2"}]},
+     "address": "/Taking-Terms-Apart/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Sorts--Lean-Type-to--Srt":
    [{"id": "Cvc___lean----High-Level-API-for-CVC5--Sorts--Lean-Type-to--Srt",
      "data":
@@ -155,6 +319,91 @@
        {"title": "Sorts", "shortTitle": null, "number": "3"},
        {"title": "Lean Type to  Srt", "shortTitle": null, "number": "1"}]},
      "address": "/Sorts/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--More-check-sat-functions":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--More-check-sat-functions",
+     "data":
+     {"title": "More check-sat functions",
+      "shortTitle": null,
+      "sectionNum": "6.3.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "More check-sat functions",
+        "shortTitle": null,
+        "number": "3"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols--Mutually-recursive-function-symbols":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols--Mutually-recursive-function-symbols",
+     "data":
+     {"title": "Mutually recursive function symbols",
+      "shortTitle": null,
+      "sectionNum": "6.4.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Defining (recursive) function symbols",
+        "shortTitle": null,
+        "number": "4"},
+       {"title": "Mutually recursive function symbols",
+        "shortTitle": null,
+        "number": "1"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--Defining-_LPAR_recursive_RPAR_-function-symbols",
+     "data":
+     {"title": "Defining (recursive) function symbols",
+      "shortTitle": null,
+      "sectionNum": "6.4.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Defining (recursive) function symbols",
+        "shortTitle": null,
+        "number": "4"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Check-sat-and-modal-environments":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Solver--Check-sat-and-modal-environments",
+     "data":
+     {"title": "Check-sat and modal environments",
+      "shortTitle": null,
+      "sectionNum": "6.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Check-sat and modal environments",
+        "shortTitle": null,
+        "number": "2"}]},
+     "address": "/Solver/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Solver--Basics":
+   [{"id": "Cvc___lean----High-Level-API-for-CVC5--Solver--Basics",
+     "data":
+     {"title": "Basics",
+      "shortTitle": null,
+      "sectionNum": "6.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Basics", "shortTitle": null, "number": "1"}]},
+     "address": "/Solver/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Overview--Synthesis":
    [{"id": "Cvc___lean----High-Level-API-for-CVC5--Overview--Synthesis",
      "data":
@@ -502,6 +751,22 @@
   "description": "Documentation for Lean constants",
   "contents":
   {"Cvc.Ω": [{"id": "Cvc______", "data": null, "address": "/Environment/"}],
+   "Cvc.Untyped.Term.typeCheckAs":
+   [{"id": "Cvc___Untyped___Term___typeCheckAs",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Untyped.Term.typeCheck":
+   [{"id": "Cvc___Untyped___Term___typeCheck",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Untyped.Term.mkSymbolAs":
+   [{"id": "Cvc___Untyped___Term___mkSymbolAs",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Untyped.Term.mkSymbol":
+   [{"id": "Cvc___Untyped___Term___mkSymbol",
+     "data": null,
+     "address": "/Terms/"}],
    "Cvc.Untyped.Term.mkInt":
    [{"id": "Cvc___Untyped___Term___mkInt", "data": null, "address": "/Terms/"}],
    "Cvc.Untyped.Term.mkBool":
@@ -512,6 +777,18 @@
    [{"id": "Cvc___Untyped___Term___and", "data": null, "address": "/Terms/"}],
    "Cvc.Untyped.Term":
    [{"id": "Cvc___Untyped___Term", "data": null, "address": "/Terms/"}],
+   "Cvc.Untyped.Solver.setOption":
+   [{"id": "Cvc___Untyped___Solver___setOption",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Untyped.Solver.setOpt":
+   [{"id": "Cvc___Untyped___Solver___setOpt",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Untyped.Solver.setLogic":
+   [{"id": "Cvc___Untyped___Solver___setLogic",
+     "data": null,
+     "address": "/Solver/"}],
    "Cvc.Typed.Term.mkSymbolAs":
    [{"id": "Cvc___Typed___Term___mkSymbolAs",
      "data": null,
@@ -522,14 +799,78 @@
      "address": "/Terms/"}],
    "Cvc.Typed.Term.mkInt":
    [{"id": "Cvc___Typed___Term___mkInt", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Term.mkForall":
+   [{"id": "Cvc___Typed___Term___mkForall",
+     "data": null,
+     "address": "/Terms/"}],
+   "Cvc.Typed.Term.mkExists":
+   [{"id": "Cvc___Typed___Term___mkExists",
+     "data": null,
+     "address": "/Terms/"}],
    "Cvc.Typed.Term.mkBool":
    [{"id": "Cvc___Typed___Term___mkBool", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Term.lambda":
+   [{"id": "Cvc___Typed___Term___lambda", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Term.erase":
+   [{"id": "Cvc___Typed___Term___erase", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.and":
    [{"id": "Cvc___Typed___Term___and", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.add":
    [{"id": "Cvc___Typed___Term___add", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term":
    [{"id": "Cvc___Typed___Term", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.Solver.new":
+   [{"id": "Cvc___Typed___Solver___new", "data": null, "address": "/Solver/"}],
+   "Cvc.Typed.Solver.getValue":
+   [{"id": "Cvc___Typed___Solver___getValue",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.getUnsatCore":
+   [{"id": "Cvc___Typed___Solver___getUnsatCore",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.getTimeoutCore":
+   [{"id": "Cvc___Typed___Solver___getTimeoutCore",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.defineFun":
+   [{"id": "Cvc___Typed___Solver___defineFun",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.checkSat?":
+   [{"id": "Cvc___Typed___Solver___checkSat___",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.checkSat":
+   [{"id": "Cvc___Typed___Solver___checkSat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.checkIsSat":
+   [{"id": "Cvc___Typed___Solver___checkIsSat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.assert":
+   [{"id": "Cvc___Typed___Solver___assert",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.EnvUnsat":
+   [{"id": "Cvc___Typed___Solver___EnvUnsat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.EnvUnknown":
+   [{"id": "Cvc___Typed___Solver___EnvUnknown",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver.EnvSat":
+   [{"id": "Cvc___Typed___Solver___EnvSat",
+     "data": null,
+     "address": "/Solver/"}],
+   "Cvc.Typed.Solver":
+   [{"id": "Cvc___Typed___Solver", "data": null, "address": "/Solver/"}],
+   "Cvc.Typed.BVars":
+   [{"id": "Cvc___Typed___BVars", "data": null, "address": "/Terms/"}],
+   "Cvc.Typed.BVar":
+   [{"id": "Cvc___Typed___BVar", "data": null, "address": "/Terms/"}],
    "Cvc.ToTyp.typ":
    [{"id": "Cvc___ToTyp___mk", "data": null, "address": "/Sorts/"}],
    "Cvc.ToTyp.mk":
