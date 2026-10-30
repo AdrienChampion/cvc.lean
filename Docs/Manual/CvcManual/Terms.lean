@@ -43,16 +43,11 @@ tag := "termsOverview"
 htmlSplit := .never
 %%%
 
-Cvc.lean exposes two API-s for terms: `Typed` and `Untyped`. The former provides very strong static
-guarantees by strongly-typing terms; the latter does not but is more flexible, allowing in
-particular to build lists/arrays of terms of different sorts.
+Cvc.lean exposes two API-s for terms: `Typed` and `Untyped`. The former provides very strong static guarantees by strongly-typing terms; the latter does not but is more flexible, allowing in particular to build lists/arrays of terms of different sorts.
 
-> *NB:* cvc.lean enforces type-safety through definition irreducibility, which means you need to
-> use Lean's `module` system to get any of its benefits.
+> *NB:* cvc.lean enforces type-safety through definition irreducibility, which means you need to use Lean's `module` system to get any of its benefits.
 
-Terms can be constructed by calling constructor-functions, but cvc.lean also provides a syntax
-extension `smt! ...` that supports Lean-like syntax to create terms. This discussion below presents
-both, but the rest of this document will almost always rely on the syntax extension.
+Terms can be constructed by calling constructor-functions, but cvc.lean also provides a syntax extension `smt! ...` that supports Lean-like syntax to create terms. This discussion below presents both, but the rest of this document will almost always rely on the syntax extension.
 
 
 
@@ -60,27 +55,21 @@ both, but the rest of this document will almost always rely on the syntax extens
 
 {docstring Typed.Term}
 
-Typed terms have a type parameter for the actual `Srt` of that term.
-We saw previously that `ToTyp` links types to `Srt`-s, and it is precisely the mechanism used here.
-Typing terms lets us check statically that term constructors are invoked in a valid way, and makes
-their signature as precise as it can be.
+Typed terms have a type parameter for the actual `Srt` of that term. We saw previously that `ToTyp` links types to `Srt`-s, and it is precisely the mechanism used here. Typing terms lets us check statically that term constructors are invoked in a valid way, and makes their signature as precise as it can be.
 
 {docstring Typed.Term.mkBool}
 {docstring Typed.Term.and}
 {docstring Typed.Term.mkInt}
 
-Some term operators are polymorphic: addition for instance works on any arithmetic terms as long as
-they have the same sort.
+Some term operators are polymorphic: addition for instance works on any arithmetic terms as long as they have the same sort.
 
 {docstring Typed.Term.add}
 
-Notice that the type-class constraint `IsArith α` must hold, which asks for a proof that the `Typ`
-associated to `α` is actually arithmetic.
+Notice that the type-class constraint `IsArith α` must hold, which asks for a proof that the `Typ` associated to `α` is actually arithmetic.
 
 {docstring IsArith}
 
-We can declare function symbols by either letting type inference figure out the type for us, or by
-providing it explicitly.
+We can declare function symbols by either letting type inference figure out the type for us, or by providing it explicitly.
 
 {docstring Typed.Term.mkSymbol}
 {docstring Typed.Term.mkSymbolAs}
@@ -93,16 +82,13 @@ providing it explicitly.
 
 {docstring Untyped.Term}
 
-Untyped terms do not have a type parameter corresponding to their sort, which means untyped term
-constructors do not provide any static guarantee that the result is a valid term. Instead, invalid
-terms will fail at runtime.
+Untyped terms do not have a type parameter corresponding to their sort, which means untyped term constructors do not provide any static guarantee that the result is a valid term. Instead, invalid terms will fail at runtime.
 
 {docstring Untyped.Term.mkBool}
 {docstring Untyped.Term.and}
 {docstring Untyped.Term.mkInt}
 
-Unlike the typed API, the sort of an untyped term for a function symbol cannot be inferred and must
-be given explicitly. The first way to do so is to pass the actual sort.
+Unlike the typed API, the sort of an untyped term for a function symbol cannot be inferred and must be given explicitly. The first way to do so is to pass the actual sort.
 
 {docstring Untyped.Term.mkSymbol}
 
@@ -123,13 +109,11 @@ variable [Ω]
 
 ## Untyped to typed
 
-The {lean}`Untyped.Term.typeCheckAs` type-checks at runtime an untyped term against (the sort
-associated to) a static type to produce a typed term.
+The {lean}`Untyped.Term.typeCheckAs` type-checks at runtime an untyped term against (the sort associated to) a static type to produce a typed term.
 
 {docstring Untyped.Term.typeCheckAs}
 
-If the term's type can be inferred from context, `Untyped.Term.typeCheck` is more concise
-alternative.
+If the term's type can be inferred from context, `Untyped.Term.typeCheck` is more concise alternative.
 
 {docstring Untyped.Term.typeCheck}
 
@@ -171,8 +155,7 @@ cannot type the following term as `Int`, term has sort `Bool`:
 
 ## Typed to untyped
 
-This direction is simpler in that it cannot fail since we're simply erasing compile-time type
-information.
+This direction is simpler in that it cannot fail since we're simply erasing compile-time type information.
 
 {docstring Typed.Term.erase}
 
@@ -214,19 +197,15 @@ It also provides a type for collections of {lean}`BVar`-s.
 
 {docstring Cvc.Typed.BVars}
 
-> The untyped API for bound variables is very similar but with no type information.
-> {lean}`Cvc.Untyped.BVars` is thus simply an array of untyped bound variables, and all checks are
-> performed at runtime. We only present the typed API in this section.
+> The untyped API for bound variables is very similar but with no type information. {lean}`Cvc.Untyped.BVars` is thus simply an array of untyped bound variables, and all checks are performed at runtime. We only present the typed API in this section.
 
-As long as this list of bound variables (and their type) is known statically, functions such as
-{lean}`Term.lambda` are able to deconstruct it and infer the type of the corresponding function.
+As long as this list of bound variables (and their type) is known statically, functions such as {lean}`Term.lambda` are able to deconstruct it and infer the type of the corresponding function.
 
 ## Lambdas
 
 {docstring Cvc.Typed.Term.lambda}
 
-This first example builds the bound variables list and the lambda term by hand, see below for a much
-more concise version using `smt!`.
+This first example builds the bound variables list and the lambda term by hand, see below for a much more concise version using `smt!`.
 
 ```lean (name := ex_BoundVars_lambda1)
 #eval Env.runIO do
