@@ -24,6 +24,7 @@ public import VersoManual
 
 import CvcManual.Terms.TypedTermsExamples
 import CvcManual.Terms.UntypedTermsExamples
+import CvcManual.Terms.Views
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -330,3 +331,5 @@ exists_i := (exists ((i Int)) (forall ((j Int)) (=> (< n j) (< i j))))
 sat
 - n := -1
 ```
+
+{include 1 CvcManual.Terms.Views}
