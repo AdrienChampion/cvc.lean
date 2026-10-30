@@ -5,16 +5,17 @@
   {"views":
    [{"id": "views",
      "data":
-     {"title": "Taking Terms Apart",
+     {"title": "Term inspection",
       "shortTitle": null,
-      "sectionNum": "5.",
+      "sectionNum": "4.5.",
       "searchPriority": 50,
       "context":
       [{"title": "Cvc.lean -- High-Level API for CVC5",
         "shortTitle": "Cvc.lean user manual",
         "number": null},
-       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"}]},
-     "address": "/Taking-Terms-Apart/"}],
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Term inspection", "shortTitle": null, "number": "5"}]},
+     "address": "/Terms/"}],
    "termsOverview":
    [{"id": "termsOverview",
      "data":
@@ -46,13 +47,13 @@
      "data":
      {"title": "Solver",
       "shortTitle": null,
-      "sectionNum": "6.",
+      "sectionNum": "5.",
       "searchPriority": 50,
       "context":
       [{"title": "Cvc.lean -- High-Level API for CVC5",
         "shortTitle": "Cvc.lean user manual",
         "number": null},
-       {"title": "Solver", "shortTitle": null, "number": "6"}]},
+       {"title": "Solver", "shortTitle": null, "number": "5"}]},
      "address": "/Solver/"}],
    "overview":
    [{"id": "overview",
@@ -220,6 +221,40 @@
        {"title": "Terms", "shortTitle": null, "number": "4"},
        {"title": "Typed Terms", "shortTitle": null, "number": "1"}]},
      "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Term-inspection--The-View-of-the-Imported-Theories":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Term-inspection--The-View-of-the-Imported-Theories",
+     "data":
+     {"title": "The View of the Imported Theories",
+      "shortTitle": null,
+      "sectionNum": "4.5.1.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Term inspection", "shortTitle": null, "number": "5"},
+       {"title": "The View of the Imported Theories",
+        "shortTitle": null,
+        "number": "1"}]},
+     "address": "/Terms/"}],
+   "Cvc___lean----High-Level-API-for-CVC5--Terms--Term-inspection--Folding-and-Rewriting":
+   [{"id":
+     "Cvc___lean----High-Level-API-for-CVC5--Terms--Term-inspection--Folding-and-Rewriting",
+     "data":
+     {"title": "Folding and Rewriting",
+      "shortTitle": null,
+      "sectionNum": "4.5.2.",
+      "searchPriority": 50,
+      "context":
+      [{"title": "Cvc.lean -- High-Level API for CVC5",
+        "shortTitle": "Cvc.lean user manual",
+        "number": null},
+       {"title": "Terms", "shortTitle": null, "number": "4"},
+       {"title": "Term inspection", "shortTitle": null, "number": "5"},
+       {"title": "Folding and Rewriting", "shortTitle": null, "number": "2"}]},
+     "address": "/Terms/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Quantifiers":
    [{"id":
      "Cvc___lean----High-Level-API-for-CVC5--Terms--Bound-variables___-lambdas___-quantifiers--Quantifiers",
@@ -273,38 +308,6 @@
         "shortTitle": null,
         "number": "4"}]},
      "address": "/Terms/"}],
-   "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--The-View-of-the-Imported-Theories":
-   [{"id":
-     "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--The-View-of-the-Imported-Theories",
-     "data":
-     {"title": "The View of the Imported Theories",
-      "shortTitle": null,
-      "sectionNum": "5.1.",
-      "searchPriority": 50,
-      "context":
-      [{"title": "Cvc.lean -- High-Level API for CVC5",
-        "shortTitle": "Cvc.lean user manual",
-        "number": null},
-       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"},
-       {"title": "The View of the Imported Theories",
-        "shortTitle": null,
-        "number": "1"}]},
-     "address": "/Taking-Terms-Apart/"}],
-   "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--Folding-and-Rewriting":
-   [{"id":
-     "Cvc___lean----High-Level-API-for-CVC5--Taking-Terms-Apart--Folding-and-Rewriting",
-     "data":
-     {"title": "Folding and Rewriting",
-      "shortTitle": null,
-      "sectionNum": "5.2.",
-      "searchPriority": 50,
-      "context":
-      [{"title": "Cvc.lean -- High-Level API for CVC5",
-        "shortTitle": "Cvc.lean user manual",
-        "number": null},
-       {"title": "Taking Terms Apart", "shortTitle": null, "number": "5"},
-       {"title": "Folding and Rewriting", "shortTitle": null, "number": "2"}]},
-     "address": "/Taking-Terms-Apart/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Sorts--Lean-Type-to--Srt":
    [{"id": "Cvc___lean----High-Level-API-for-CVC5--Sorts--Lean-Type-to--Srt",
      "data":
@@ -325,13 +328,13 @@
      "data":
      {"title": "More check-sat functions",
       "shortTitle": null,
-      "sectionNum": "6.3.",
+      "sectionNum": "5.3.",
       "searchPriority": 50,
       "context":
       [{"title": "Cvc.lean -- High-Level API for CVC5",
         "shortTitle": "Cvc.lean user manual",
         "number": null},
-       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Solver", "shortTitle": null, "number": "5"},
        {"title": "More check-sat functions",
         "shortTitle": null,
         "number": "3"}]},
@@ -342,13 +345,13 @@
      "data":
      {"title": "Mutually recursive function symbols",
       "shortTitle": null,
-      "sectionNum": "6.4.1.",
+      "sectionNum": "5.4.1.",
       "searchPriority": 50,
       "context":
       [{"title": "Cvc.lean -- High-Level API for CVC5",
         "shortTitle": "Cvc.lean user manual",
         "number": null},
-       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Solver", "shortTitle": null, "number": "5"},
        {"title": "Defining (recursive) function symbols",
         "shortTitle": null,
         "number": "4"},
@@ -362,13 +365,13 @@
      "data":
      {"title": "Defining (recursive) function symbols",
       "shortTitle": null,
-      "sectionNum": "6.4.",
+      "sectionNum": "5.4.",
       "searchPriority": 50,
       "context":
       [{"title": "Cvc.lean -- High-Level API for CVC5",
         "shortTitle": "Cvc.lean user manual",
         "number": null},
-       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Solver", "shortTitle": null, "number": "5"},
        {"title": "Defining (recursive) function symbols",
         "shortTitle": null,
         "number": "4"}]},
@@ -379,13 +382,13 @@
      "data":
      {"title": "Check-sat and modal environments",
       "shortTitle": null,
-      "sectionNum": "6.2.",
+      "sectionNum": "5.2.",
       "searchPriority": 50,
       "context":
       [{"title": "Cvc.lean -- High-Level API for CVC5",
         "shortTitle": "Cvc.lean user manual",
         "number": null},
-       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Solver", "shortTitle": null, "number": "5"},
        {"title": "Check-sat and modal environments",
         "shortTitle": null,
         "number": "2"}]},
@@ -395,13 +398,13 @@
      "data":
      {"title": "Basics",
       "shortTitle": null,
-      "sectionNum": "6.1.",
+      "sectionNum": "5.1.",
       "searchPriority": 50,
       "context":
       [{"title": "Cvc.lean -- High-Level API for CVC5",
         "shortTitle": "Cvc.lean user manual",
         "number": null},
-       {"title": "Solver", "shortTitle": null, "number": "6"},
+       {"title": "Solver", "shortTitle": null, "number": "5"},
        {"title": "Basics", "shortTitle": null, "number": "1"}]},
      "address": "/Solver/"}],
    "Cvc___lean----High-Level-API-for-CVC5--Overview--Synthesis":
@@ -789,6 +792,8 @@
    [{"id": "Cvc___Untyped___Solver___setLogic",
      "data": null,
      "address": "/Solver/"}],
+   "Cvc.Typed.Term.relax":
+   [{"id": "Cvc___Typed___Term___relax", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.mkSymbolAs":
    [{"id": "Cvc___Typed___Term___mkSymbolAs",
      "data": null,
@@ -811,8 +816,6 @@
    [{"id": "Cvc___Typed___Term___mkBool", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.lambda":
    [{"id": "Cvc___Typed___Term___lambda", "data": null, "address": "/Terms/"}],
-   "Cvc.Typed.Term.erase":
-   [{"id": "Cvc___Typed___Term___erase", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.and":
    [{"id": "Cvc___Typed___Term___and", "data": null, "address": "/Terms/"}],
    "Cvc.Typed.Term.add":

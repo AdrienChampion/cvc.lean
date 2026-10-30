@@ -68,7 +68,7 @@
  "<code>Cvc.Typed.Solver.qe [Ω] (s : Solver) (q : Term Bool) : Env (Term Bool)</code>",
  "54": "<code><span class=\"literal string\">\"y\"</span> : String</code>",
  "53":
- "<code>Cvc.Typed.Term.erase [Ω] {α : Type} (t : Term α) : Untyped.Term</code>",
+ "<code>Cvc.Typed.Term.relax [Ω] {α : Type} (t : Term α) : Untyped.Term</code>",
  "52":
  "<code>Cvc.Typed.Solver.getSynthSolution [Ω] (s : Solver) {σ : Type} (fn : Term σ) : s.EnvSolved (Term σ)</code>",
  "51":
@@ -222,7 +222,7 @@
  "366":
  "<code>Cvc.Typed.Solver.getValue [Cvc.Ω] (s : Cvc.Typed.Solver) {α : Type} [Cvc.Typed.TermToValue α]\n  (term : Cvc.Typed.Term α) : s.EnvSat α</code><span class=\"sep\"></span><code class=\"docstring\">The value the model gives a term, as the Lean value its index describes. </code>",
  "365":
- "<code>Cvc.Typed.Term [Cvc.Ω] : Type → Type</code><span class=\"sep\"></span><code class=\"docstring\">A cvc5 term whose sort is the one the Lean type `α` denotes.\n\n`Term Int`, `Term (Set Bool)` and `Term (Int → Bool)` are terms of the SMT-LIB sorts `Int`,\n`(Set Bool)` and `(-&gt; Int Bool)`; a Lean type denotes a sort through its `ToTyp` instance. Every\nconstructor states its sorts through the index, so a sort mistake is a Lean type error rather than\na cvc5 error at runtime, and a value read out of a model comes back as an `α`.\n\nThe index is phantom: at runtime a `Term α` is exactly a `Cvc.Untyped.Term`. `erase` goes down for\nfree, and `Cvc.Untyped.Term.typeCheck` goes up by checking the term's sort.\n</code>",
+ "<code>Cvc.Typed.Term [Cvc.Ω] : Type → Type</code><span class=\"sep\"></span><code class=\"docstring\">A cvc5 term whose sort is the one the Lean type `α` denotes.\n\n`Term Int`, `Term (Set Bool)` and `Term (Int → Bool)` are terms of the SMT-LIB sorts `Int`,\n`(Set Bool)` and `(-&gt; Int Bool)`; a Lean type denotes a sort through its `ToTyp` instance. Every\nconstructor states its sorts through the index, so a sort mistake is a Lean type error rather than\na cvc5 error at runtime, and a value read out of a model comes back as an `α`.\n\nThe index is phantom: at runtime a `Term α` is exactly a `Cvc.Untyped.Term`. `relax` goes down for\nfree, and `Cvc.Untyped.Term.typeCheck` goes up by checking the term's sort.\n</code>",
  "364": "<code>Cvc.Typed.Term Bool</code>",
  "363": "<code>Cvc.Typed.Solver</code>",
  "362":
@@ -389,13 +389,13 @@
  "268":
  "<code>Cvc.Typed.BVar [Ω] (α : Type) : Type</code><span class=\"sep\"></span><code class=\"docstring\">A bound variable. </code>",
  "267":
- "<code>Cvc.Typed.Term.erase [Ω] {α : Type} (t : Term α) : Untyped.Term</code><span class=\"sep\"></span><code class=\"docstring\">Erases its type. </code>",
+ "<code>Cvc.Typed.Term.relax [Ω] {α : Type} (t : Term α) : Untyped.Term</code><span class=\"sep\"></span><code class=\"docstring\">Relaxes it to the sort-erased term it is, for free. </code>",
  "266":
  "<code class=\"docstring\">Typed `smt!`.\n\n`scoped`, so that `open Cvc.Typed` selects this layer's DSL. It forwards to `smtT!`, which\nexpands to fully-qualified `Cvc.Typed.Term.…` calls; nothing needs to be in scope.\n\nOpening both layers at once makes the two `smt!` parsers ambiguous — open the one you mean.\n</code>",
  "265":
  "<code>Cvc.Typed.Term.mkSymbol [Ω] {α : Type} [ToTyp α] (name : String) : Env (Term α)</code><span class=\"sep\"></span><code class=\"docstring\">A symbol of the given sort: a fresh uninterpreted constant. </code>",
  "264":
- "<code>Cvc.Typed.Term.erase [Ω] {α : Type} (t : Typed.Term α) : Untyped.Term</code><span class=\"sep\"></span><code class=\"docstring\">Erases its type. </code>",
+ "<code>Cvc.Typed.Term.relax [Ω] {α : Type} (t : Typed.Term α) : Untyped.Term</code><span class=\"sep\"></span><code class=\"docstring\">Relaxes it to the sort-erased term it is, for free. </code>",
  "263": "<code>Typed.Term Int</code>",
  "262":
  "<code>Cvc.Untyped.Term.typeCheck [Ω] {α : Type} [ToTyp α] (t : Term) : Env (Typed.Term α)</code><span class=\"sep\"></span><code class=\"docstring\">Types an untyped term. </code>",
@@ -499,7 +499,7 @@
  "<code>Cvc.Untyped.Term [Ω] : Type</code><span class=\"sep\"></span><code class=\"docstring\">A sort-erased cvc5 term.\n\nThe term carries no sort on the Lean side: its sort is known to cvc5 alone, so a sort mistake, such\nas `and` applied to an integer, is reported by cvc5 at runtime. In exchange, terms of different\nsorts share one type, and an `Array Term` can hold them side by side.\n\nA term belongs to the `Ω` scope it was built in and cannot leave it. At runtime it is exactly a\ncvc5 term, so the wrapper costs nothing. `typeCheck` checks its sort against a Lean type and gives\nit that type as an index, producing a `Cvc.Typed.Term`.\n</code>",
  "205": "<code>Cvc.Set (α : Type) [Ord α] : Type</code>",
  "204":
- "<code>Cvc.Typed.Term [Ω] : Type → Type</code><span class=\"sep\"></span><code class=\"docstring\">A cvc5 term whose sort is the one the Lean type `α` denotes.\n\n`Term Int`, `Term (Set Bool)` and `Term (Int → Bool)` are terms of the SMT-LIB sorts `Int`,\n`(Set Bool)` and `(-&gt; Int Bool)`; a Lean type denotes a sort through its `ToTyp` instance. Every\nconstructor states its sorts through the index, so a sort mistake is a Lean type error rather than\na cvc5 error at runtime, and a value read out of a model comes back as an `α`.\n\nThe index is phantom: at runtime a `Term α` is exactly a `Cvc.Untyped.Term`. `erase` goes down for\nfree, and `Cvc.Untyped.Term.typeCheck` goes up by checking the term's sort.\n</code>",
+ "<code>Cvc.Typed.Term [Ω] : Type → Type</code><span class=\"sep\"></span><code class=\"docstring\">A cvc5 term whose sort is the one the Lean type `α` denotes.\n\n`Term Int`, `Term (Set Bool)` and `Term (Int → Bool)` are terms of the SMT-LIB sorts `Int`,\n`(Set Bool)` and `(-&gt; Int Bool)`; a Lean type denotes a sort through its `ToTyp` instance. Every\nconstructor states its sorts through the index, so a sort mistake is a Lean type error rather than\na cvc5 error at runtime, and a value read out of a model comes back as an `α`.\n\nThe index is phantom: at runtime a `Term α` is exactly a `Cvc.Untyped.Term`. `relax` goes down for\nfree, and `Cvc.Untyped.Term.typeCheck` goes up by checking the term's sort.\n</code>",
  "203": "<code>Cvc.Bag (α : Type) [Ord α] : Type</code>",
  "202": "<code>Cvc.FiniteField (size : Nat) : Type</code>",
  "201": "<code>Cvc.Srt.of [Ω] (α : Type) [A : ToTyp α] : Env Srt</code>",
