@@ -1,0 +1,72 @@
+name: Pages
+
+# Publishes the API reference under `api/` and the manual under `manual/`, on every push to `main`
+# (which is what merging a pull request does).
+#
+# There is no branch: the site is uploaded as an artifact and deployed by GitHub Pages, which needs
+# the repository's Pages source set to "GitHub Actions". Each deployment replaces the whole site, so
+# a file a new build no longer produces disappears from it.
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# one deployment at a time, and a newer push waits rather than cancelling one already publishing
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      # The API reference's project is generated under `.lake`, so that one path covers it — except
+      # its build directory: doc-gen4 never drops the pages of a module that no longer exists, so the
+      # reference is regenerated from scratch rather than published with stale pages in it.
+      - name: Cache the Lake directories
+        uses: actions/cache@v4
+        with:
+          path: |
+            .lake
+            !.lake/docbuild/.lake/build
+            Docs/Manual/.lake
+          key: docs-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: docs-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-
+      - name: Setup Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          use-github-cache: false
+      - name: Build the API reference
+        run: lake run buildApiDocs
+      - name: Build the manual
+        run: lake run buildManual
+      - name: Assemble the site
+        run: |
+          mkdir _site
+          cp -r .lake/docbuild/.lake/build/doc _site/api
+          cp -r Docs/Manual/_out/html-multi _site/manual
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -7,30 +7,81 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+# a newer push to a pull request or branch cancels the run it supersedes
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# The Lake directory is cached per commit: `build` saves it, and `test` and `manual` restore it, so
+# that neither rebuilds the library. A key that misses falls back on the newest cache for the same
+# toolchain and manifest, so even a first run on a commit only rebuilds what changed.
+#
+# There is no `lake update`: the build follows the committed `lake-manifest.json`, and lean-cvc5
+# fetches its precompiled cvc5 as a build target.
+
 jobs:
   build:
-    runs-on: macos-latest
-
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Setup Lean Environment
-      uses: leanprover/lean-action@v1
-      with:
-        auto-config: false
-        use-github-cache: false
-    - name: Update
-      run: lake update
-    - name: Build
-      run: lake build
-    - name: Test
-      run: lake test
-    # - name: Purge Disk Cache # https://github.com/actions/runner-images/issues/2619
-    #   if: github.event_name == 'release' && runner.os == 'macOS'
-    #   run: sudo /usr/sbin/purge
-    # - name: Upload Release Artifact
-    #   if: github.event_name == 'release'
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     TAG: ${{ github.event.release.tag_name }}
-    #   run: lake upload $TAG
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Cache the Lake directory
+        uses: actions/cache@v4
+        with:
+          path: .lake
+          key: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-
+      - name: Setup Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          use-github-cache: false
+      - name: Build
+        run: lake build
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Restore the Lake directory
+        uses: actions/cache/restore@v4
+        with:
+          path: .lake
+          key: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-
+      - name: Setup Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          use-github-cache: false
+      - name: Test
+        run: lake test
+
+  # the manual compiles its examples and checks their output, so a change breaking one fails here
+  manual:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Restore the Lake directory
+        uses: actions/cache/restore@v4
+        with:
+          path: .lake
+          key: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-
+      - name: Cache the manual's Lake directory
+        uses: actions/cache@v4
+        with:
+          path: Docs/Manual/.lake
+          key: manual-${{ runner.os }}-${{ hashFiles('Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: manual-${{ runner.os }}-${{ hashFiles('Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-
+      - name: Setup Lean
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          use-github-cache: false
+      - name: Build the manual
+        run: lake run buildManual
