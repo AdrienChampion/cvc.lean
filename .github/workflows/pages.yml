@@ -35,9 +35,9 @@ jobs:
           path: |
             .lake
             !.lake/docbuild/.lake/build
-            Docs/Manual/.lake
-          key: docs-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-${{ github.sha }}
-          restore-keys: docs-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-
+            CvcManual/.lake
+          key: docs-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'CvcManual/lean-toolchain', 'CvcManual/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: docs-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'CvcManual/lean-toolchain', 'CvcManual/lake-manifest.json') }}-
       - name: Setup Lean
         uses: leanprover/lean-action@v1
         with:
@@ -51,7 +51,7 @@ jobs:
         run: |
           mkdir _site
           cp -r .lake/docbuild/.lake/build/doc _site/api
-          cp -r Docs/Manual/_out/html-multi _site/manual
+          cp -r CvcManual/_out/html-multi _site/manual
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3
         with:

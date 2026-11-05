@@ -12,9 +12,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# The Lake directory is cached per commit: `build` saves it, and `test` and `manual` restore it, so
-# that neither rebuilds the library. A key that misses falls back on the newest cache for the same
-# toolchain and manifest, so even a first run on a commit only rebuilds what changed.
+# The Lake directory is cached per commit: `build` saves it and `test` restores it, so that the
+# tests do not rebuild the library; `manual` keeps a cache of its own, see there. A key that misses
+# falls back on the newest cache for the same toolchain and manifest, so even a first run on a
+# commit only rebuilds what changed.
 #
 # There is no `lake update`: the build follows the committed `lake-manifest.json`, and lean-cvc5
 # fetches its precompiled cvc5 as a build target.
@@ -66,18 +67,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Restore the Lake directory
-        uses: actions/cache/restore@v4
-        with:
-          path: .lake
-          key: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-${{ github.sha }}
-          restore-keys: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}-
-      - name: Cache the manual's Lake directory
+      # The manual shares the root's packages directory, so Verso and its dependencies live in the
+      # root's `.lake`: this job caches that directory itself rather than restoring `build`'s,
+      # which has no Verso in it. Falling back on the newest manual cache costs an incremental
+      # rebuild of the library at most, where restoring `build`'s would rebuild Verso from scratch.
+      - name: Cache the Lake directories
         uses: actions/cache@v4
         with:
-          path: Docs/Manual/.lake
-          key: manual-${{ runner.os }}-${{ hashFiles('Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-${{ github.sha }}
-          restore-keys: manual-${{ runner.os }}-${{ hashFiles('Docs/Manual/lean-toolchain', 'Docs/Manual/lake-manifest.json') }}-
+          path: |
+            .lake
+            CvcManual/.lake
+          key: manual-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'CvcManual/lean-toolchain', 'CvcManual/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: manual-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'CvcManual/lean-toolchain', 'CvcManual/lake-manifest.json') }}-
       - name: Setup Lean
         uses: leanprover/lean-action@v1
         with:

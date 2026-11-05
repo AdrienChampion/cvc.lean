@@ -26,7 +26,7 @@ lean_lib cvcTests {
 
 /-! ## Documentation
 
-The manual (`Docs/Manual`, written with Verso) and the API reference (built by doc-gen4) are Lake
+The manual (`CvcManual`, written with Verso) and the API reference (built by doc-gen4) are Lake
 projects of their own. The manual's is part of the repository; the API reference's is generated
 under `.lake`, being nothing but a doc-gen4 dependency matched to this project's toolchain. These
 scripts build and serve them from here: `lake run buildManual`, `lake run serveManual`,
@@ -71,7 +71,7 @@ def portOf (args : List String) : IO Nat :=
   | _ => throw <| .userError "expected at most one argument, the port to serve on"
 
 /-- The manual's project. -/
-def manualDir : System.FilePath := __dir__ / "Docs" / "Manual"
+def manualDir : System.FilePath := __dir__ / "CvcManual"
 
 /-- Where the API reference's project is generated: under `.lake`, with the build artifacts. -/
 def apiDocsDir : System.FilePath := __dir__ / ".lake" / "docbuild"
@@ -124,7 +124,7 @@ def buildApiDocsProject : IO UInt32 := do
   if code != 0 then return code
   lakeIn apiDocsDir #["build", "Cvc:docs"]
 
-/-- Builds the manual into `Docs/Manual/_out/html-multi`. -/
+/-- Builds the manual into `CvcManual/_out/html-multi`. -/
 script buildManual do
   lakeIn manualDir #["exe", "docs"]
 
