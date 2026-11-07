@@ -50,7 +50,9 @@ Note: The following definitions were not unfolded because their definition is no
   Srt ↦ 2
 ```
 
-Using a sort from in an environment different from its native one is also a type error.
+The note closing the message comes from Lean and can be ignored: every sort error of this kind carries it.
+
+Using a sort in an environment different from its native one is also a type error.
 
 ```lean +error (name := env_ex_unsafe_mix)
 def mkBoolSort : Env Srt := Srt.bool

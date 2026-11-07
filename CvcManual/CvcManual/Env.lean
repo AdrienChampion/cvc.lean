@@ -54,7 +54,7 @@ This API abstracts away the term manager completely and enforces manager-consist
 Cvc.Srt [Ω] : Type
 ```
 
-{lean}`Ω` is a type class whose only field is itself a type, so an instance costs nothing at runtime: it compiles to a constant. It is deliberately not a {lean}`Prop`, since any two proofs of a proposition are equal, which would make every scope's sorts and terms interchangeable. You cannot build an instance yourself, as the constructor is private.
+An instance costs nothing at runtime, and you cannot build one yourself: running an environment provides it, as described below.
 
 {decl Ω}
 
@@ -105,7 +105,7 @@ Notice that this function quantifies the {lean}`Ω`-instance {lean}`inst` for {l
 end var_code
 ```
 
-Now, to manipulate {lean}`Env` or virtually any type from the cvc.lean we need to have an {lean}`Ω`-instance in scope. We could have {lean}`[Ω]` as an argument of all our definitions, but it is often easier to have it as a variable.
+Now, to manipulate {lean}`Env` or virtually any type from cvc.lean we need to have an {lean}`Ω`-instance in scope. We could have {lean}`[Ω]` as an argument of all our definitions, but it is often easier to have it as a variable.
 
 ```lean
 variable [Ω]

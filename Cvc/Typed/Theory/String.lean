@@ -20,7 +20,7 @@ public import Cvc.Spec.String
 
 
 
-/-! # Generated String constructors, typed -/
+/-! # Strings, typed -/
 namespace Cvc.Typed.Term public section
 
 open Cvc renaming Untyped.Term → T
@@ -41,18 +41,21 @@ def getStringValue (term : Term String) : Res String := T.getStringValue term
 @[inherit_doc T.getStringValue?]
 def getStringValue? (term : Term String) : Option String := T.getStringValue? term
 
+@[inherit_doc T.mkStringValue]
+def mkStringValue (s : String) : Env (Term String) := T.mkStringValue s
+
 instance : SrtLike String where
-  valueToTerm s := mkString s false
+  valueToTerm := mkStringValue
   termToValue t := getStringValue t
 
 
 
-/-! ## The DSL's literals for this theory
+/-! ## `smt!` literals of this theory
 
-Expanded here rather than in `Cvc.Ext` so that the grammar a user gets is the grammar of the
-theories they imported: without this module, `smt!` does not accept them at all. The expander's own
-machinery lives in `Cvc.Ext`, never in `Cvc`.
+A string literal, written as in Lean, is a `Term String`.
 -/
+-- Expanded here rather than in `Cvc.Ext`, so that `smt!` accepts a theory's forms only where that
+-- theory is imported. The expander's own machinery lives in `Cvc.Ext`, never in `Cvc`.
 
 public meta section
 
@@ -67,7 +70,7 @@ macro_rules
     unless layer == Layer.typed do Macro.throwUnsupported
     unless t.raw.getKind == ``Cvc.Untyped.Term.smtStr do Macro.throwUnsupported
     let s : TSyntax `term := ⟨t.raw[0]⟩
-    `($(layer.op `mkString) $s false)
+    `($(layer.op `mkStringValue) $s)
 
 end Ext
 

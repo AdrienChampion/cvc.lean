@@ -19,17 +19,11 @@ public meta import Lean.Elab.Term
 
 /-! # Sorts
 
-The constructors of `Srt`, the translation from the pure Lean description `Typ`, and the
-refinements a sort can satisfy.
+The constructors of `Srt`, the conversions between a `Srt` and its Lean description `Typ`, and the
+classes `IsArith` and `HasConcat` the operators restrict their sorts with.
 
-`Typ.toSrt` is where function sorts flatten: it walks the right-nested spine of a `Typ.function`
-and collects the domains into cvc5's n-ary domain array, which is what makes `α → β → γ` the sort
-`(-> α β γ)` while a function in *domain* position stays nested.
-
-`IsArith` and `HasConcat` are the refinement classes the generated operators take. Each is a `Prop`
-with a single field discharged by an autoparam, so an instance is proved rather than declared, and
-`Typ.typs_of_isArith`/`typs_of_hasConcat` are what let a typed operator case-split on which sort it
-actually got.
+Function sorts are curried: `α → β → γ` is the sort `(-> α β γ)`, while a function in domain
+position stays a higher-order argument.
 -/
 namespace Cvc public section variable [Ω]
 
@@ -54,78 +48,78 @@ def% regex := getRegExpSort
 def% roundingMode := getRoundingModeSort
 def% bitVec size := mkBitVectorSort
 def% float exp sig := mkFloatingPointSort
-def% finiteField size := mkFiniteFieldSort
+
+/-- The sort of the finite field with `size` elements, `size` being prime. -/
+def finiteField (size : Nat) : Env Srt := lift% mkFiniteFieldSort size
 
 end
 
-/-- The sort declared under a name in this scope.
-
-A *declared* sort — a datatype, an uninterpreted sort — is fresh every time it is created, so it
-cannot be rebuilt from a description the way `Srt.int` or `Srt.set` can. `Srt.datatype` and friends
-remember theirs here, and this is how `Typ.toSrt` gets it back.
--/
+/-- The sort declared under `name` in this scope, failing if there is none. -/
 def ofName (name : String) : Env Srt := do
   match ← getRegisteredSort? name with
   | some srt => return srt
   | none => throwUser <|
     s!"no sort named `{name}` has been declared in this scope; \
-declare the datatype before naming it"
+declare the sort before naming it"
+-- A *declared* sort — a datatype, an uninterpreted sort — is fresh every time it is created, so it
+-- cannot be rebuilt from a description the way `Srt.int` or `Srt.set` can. `Srt.datatype` and
+-- friends remember theirs in the scope's state, and this is how `Typ.toSrt` gets it back.
 
 /-- Whether a sort has been declared under a name in this scope. -/
 def isDeclared (name : String) : Env Bool := do
   return (← getRegisteredSort? name).isSome
 
-/-- Reports sort `symbol` as already declared if it is in the `Env`'s registry. -/
+/-- Fails if a sort named `symbol` has already been declared in this scope. -/
 def checkFreshSortSymbol (symbol : String) : Env Unit := do
   if ← Srt.isDeclared symbol then throwUser s!"a sort named `{symbol}` is already declared"
 
 /-- Creates the sort of arrays from `idx` to `elm`, *e.g.* `idx.arrayTo elm`. -/
 def arrayTo (idx elm : Srt) := lift% mkArraySort idx elm
 
-/-- Creates the sort of arrays to `elm` from `idx`, *e.g.* `elm.arrayIdx idx`. -/
+/-- Creates the sort of arrays to `elm` from `idx`, *e.g.* `elm.arrayFrom idx`. -/
 def arrayFrom (elm idx : Srt) := idx.arrayTo elm
 
 /-- An array of `elm`-values indexed by `int`-values. -/
 def array (elm : Srt) : Env Srt := int >>= elm.arrayFrom
 
+/-- The sort of bags of `elm`. -/
 def bag (elm : Srt) : Env Srt := lift% mkBagSort elm
+/-- The sort of sets of `elm`. -/
 def set (elm : Srt) : Env Srt := lift% mkSetSort elm
+/-- The sort of sequences of `elm`. -/
 def seq (elm : Srt) : Env Srt := lift% mkSequenceSort elm
 
+/-- The sort of tuples of the given components. -/
 def tuple (sorts : Array Srt) : Env Srt := lift% mkTupleSort sorts
 
-@[inherit_doc Tm.mkFunctionSort]
+/-- The sort of functions from the domain sorts `dom` to `cod`. -/
 def function (dom : Array Srt) (cod : Srt)
   (domNonempty : 0 < dom.size := by (try grind) <;> fail "failed to prove the domain is nonempty")
 : Env Srt :=
   let _ := domNonempty
   lift% mkFunctionSort dom cod
 
+/-- The abstract sort of a family, its parameters left unspecified. -/
 def abstract (a : Abstract) : Env Srt := lift% mkAbstractSort a.toKind
 
 /-- cvc5's fully abstract sort, `?`.
 
-Not *first*-class: cvc5 accepts it as a container element, an array parameter or a function
-codomain, and rejects it as a nullable element, a tuple component or a function domain. That rule
-is what `Typ`/`Typ?` encode.
+cvc5 accepts it only as a set, bag or sequence element, an array's index or element, or a function's
+codomain.
 -/
 def any : Env Srt := runUnsafe fun tm => tm.mkAbstractSort .ABSTRACT_SORT
 
 def Abstract.toSrt (a : Abstract) : Env Srt := abstract a
 
-/-! ## Further constructors
-
-`mkDatatypeSort`/`mkDatatypeSorts` are not here: they consume a `Datatype.Decl`, which belongs with
-the datatype API.
--/
+/-! ## Further constructors -/
 
 -- these are written out rather than through `def%`, which leaves its arguments' types to
 -- inference and so would take a raw `cvc5.Sort` where an `Srt` is meant
 
-@[inherit_doc Tm.mkPredicateSort]
+/-- The sort of predicates over `doms`: functions from them to `Bool`. -/
 def predicate (doms : Srts) : Env Srt := lift% mkPredicateSort doms
 
-@[inherit_doc Tm.mkNullableSort]
+/-- The sort of nullable `elm` values, denoted Lean-side by `Option`. -/
 def nullable (elm : Srt) : Env Srt := lift% mkNullableSort elm
 
 /-- The first name occurring twice in a list, if any. -/
@@ -133,17 +127,10 @@ private def firstDuplicate : List String → Option String
   | [] => none
   | hd :: tl => if tl.contains hd then some hd else firstDuplicate tl
 
-/-- A record sort, of named and ordered fields.
+/-- A record sort, of named fields in order.
 
-**A record must have at least one field.** cvc5 builds the empty record sort happily, but it
-denotes what the empty tuple already denotes and nothing in SMT-LIB has a use for it, so it is
-refused here rather than left as a second spelling of the same thing.
-
-**Field names must be distinct, and this is our check, not cvc5's.** cvc5 accepts
-`{a : Int, a : Bool}` and builds a datatype carrying two selectors both named `a`, which nothing
-can then select unambiguously.
-
-The order is part of the sort: `{a : Int, b : Bool}` and `{b : Bool, a : Int}` are different.
+Fails on an empty record and on a repeated field name. The order is part of the sort:
+`{a : Int, b : Bool}` and `{b : Bool, a : Int}` are different.
 -/
 def record (fields : Array (String × Srt)) : Env Srt := do
   if fields.isEmpty then
@@ -151,13 +138,18 @@ def record (fields : Array (String × Srt)) : Env Srt := do
   if let some name := firstDuplicate (fields.toList.map Prod.fst) then
     throwUser s!"record sort has more than one field named `{name}`"
   lift% mkRecordSort fields
--- Both checks sit here rather than on the callers, so every path to a record sort inherits them —
--- `Typ.toSrt` reaches cvc5 only through this function.
+-- Both checks are ours: cvc5 builds the empty record sort, which denotes what the empty tuple
+-- already denotes, and accepts `{a : Int, a : Bool}`, building a datatype with two selectors named
+-- `a` that nothing can select unambiguously. They sit here rather than on the callers, so every
+-- path to a record sort inherits them — `Typ.toSrt` reaches cvc5 only through this function.
 
 @[inherit_doc Tm.mkParamSort]
 def param (symbol : String) : Env Srt := lift% mkParamSort symbol
 
-@[inherit_doc Tm.mkUninterpretedSort]
+/-- A new uninterpreted sort named `symbol`, which `Typ.uninterpreted symbol` then names.
+
+The name must not be taken by another sort declared in this scope.
+-/
 def uninterpreted (symbol : String) : Env Srt := do
   Srt.checkFreshSortSymbol symbol
   let u ← (lift% mkUninterpretedSort symbol)
@@ -168,8 +160,11 @@ def uninterpreted (symbol : String) : Env Srt := do
 def finiteFieldOfString (size : String) (base : UInt32 := 10) : Env Srt :=
   lift% mkFiniteFieldSortOfString size base
 
-/-- An uninterpreted sort constructor, which an `arity` of parameters instantiate into a sort. -/
-def uninterpretedConstructor (arity : Nat) (symbol : String := "") : Env Srt := do
+/-- An uninterpreted sort constructor, which `arity` parameters instantiate into a sort.
+
+The name must not be taken by another sort declared in this scope.
+-/
+def uninterpretedConstructor (arity : Nat) (symbol : String) : Env Srt := do
   Srt.checkFreshSortSymbol symbol
   let u ← (lift% mkUninterpretedSortConstructorSort arity symbol)
   registerSort symbol u
@@ -186,11 +181,14 @@ def unresolvedDatatype (symbol : String) (arity : Nat := 0) : Env Srt :=
 
 /-! ### Datatype sorts
 
-A datatype sort comes from a declaration rather than from its parts, and each call creates a
-*fresh* sort even from an identical declaration — see `Cvc/Untyped/Datatype.lean`.
+A datatype sort comes from a `Datatype.Decl`. Each call makes a *fresh* sort, even from an
+identical declaration, so a datatype is declared once per scope and then named with `Typ.datatype`.
 -/
 
-@[inherit_doc Tm.mkDatatypeSort]
+/-- The sort of the datatype `decl` declares, which `Typ.datatype` then names.
+
+The datatype's name must not be taken by another sort declared in this scope.
+-/
 def datatype (decl : Datatype.Decl) : Env Srt := do
   let name ← decl.toUnsafe.getName
   let srt : Srt ← runUnsafe fun tm => tm.mkDatatypeSort decl
@@ -199,7 +197,8 @@ def datatype (decl : Datatype.Decl) : Env Srt := do
 
 /-- The sorts of a mutually recursive group of datatypes, declared together.
 
-Members refer to each other through `addSelectorUnresolved`, which is only resolved here.
+Members refer to each other through `Datatype.Ctor.Decl.addSelectorUnresolved`. As for
+`Srt.datatype`, each name must be new to this scope.
 -/
 def datatypes (decls : Array Datatype.Decl) : Env Srts := do
   let srts : Srts ← runUnsafe fun tm => tm.mkDatatypeSorts decls
@@ -249,7 +248,13 @@ is% isDatatypeTester := isDatatypeTester
 is% isDatatypeUpdater := isDatatypeUpdater
 is% isUninterpreted := isUninterpretedSort
 is% isUninterpretedSortConstructor := isUninterpretedSortConstructor
-is% isInstantiated := isInstantiated
+
+/-- Whether this sort instantiates a parametric datatype or an uninterpreted sort constructor.
+
+cvc5 also answers `true` for a datatype sort without parameters: a non-empty
+`getInstantiatedParameters` is the reliable test. See `Srt.instantiate`.
+-/
+def isInstantiated (srt : Srt) : Bool := S.isInstantiated srt.toUnsafe
 
 end testers
 
@@ -263,6 +268,8 @@ fails elsewhere, the `?`-suffixed one answers `none`.
 
 section accessors
 
+-- Accessors whose lean-cvc5 docstring is wrong for ours are written out by hand rather than
+-- through `get%`, which inherits it.
 scoped macro "get% " id:ident " : " ty:term " := " fn:ident : command =>
   let fnId := ``S |>.append fn.getId |> Lean.mkIdent
   let fnOptId := ``S |>.append (fn.getId.appendAfter "?") |> Lean.mkIdent
@@ -275,8 +282,20 @@ scoped macro "get% " id:ident " : " ty:term " := " fn:ident : command =>
 /-! ### Any sort -/
 
 get% getKind : cvc5.SortKind := getKind
-get% hasSymbol : Bool := hasSymbol
-get% getSymbol : String := getSymbol
+
+/-- Whether this sort has a symbol, a name; see `getSymbol`. -/
+def hasSymbol (srt : Srt) : Res Bool := S.hasSymbol srt.toUnsafe |>.mapError Error.ofUnsafe
+@[inherit_doc hasSymbol]
+def hasSymbol? (srt : Srt) : Option Bool := S.hasSymbol? srt.toUnsafe
+
+/-- The symbol of this sort, its name.
+
+It is the name given to `Srt.uninterpreted`, `Srt.uninterpretedConstructor` or
+`Srt.unresolvedDatatype`.
+-/
+def getSymbol (srt : Srt) : Res String := S.getSymbol srt.toUnsafe |>.mapError Error.ofUnsafe
+@[inherit_doc getSymbol]
+def getSymbol? (srt : Srt) : Option String := S.getSymbol? srt.toUnsafe
 
 /-! ### Sized and parameterized sorts -/
 
@@ -287,8 +306,18 @@ get% getFloatSignificandSize : UInt32 := getFloatingPointSignificandSize
 
 /-! ### Containers -/
 
-get% getArrayIndexSort : Srt := getArrayIndexSort
-get% getArrayElementSort : Srt := getArrayElementSort
+/-- The index sort of an array sort. -/
+def getArrayIndexSort (srt : Srt) : Res Srt :=
+  S.getArrayIndexSort srt.toUnsafe |>.mapError Error.ofUnsafe
+@[inherit_doc getArrayIndexSort]
+def getArrayIndexSort? (srt : Srt) : Option Srt := S.getArrayIndexSort? srt.toUnsafe
+
+/-- The element sort of an array sort. -/
+def getArrayElementSort (srt : Srt) : Res Srt :=
+  S.getArrayElementSort srt.toUnsafe |>.mapError Error.ofUnsafe
+@[inherit_doc getArrayElementSort]
+def getArrayElementSort? (srt : Srt) : Option Srt := S.getArrayElementSort? srt.toUnsafe
+
 get% getSetElementSort : Srt := getSetElementSort
 get% getBagElementSort : Srt := getBagElementSort
 get% getSeqElementSort : Srt := getSequenceElementSort
@@ -307,12 +336,21 @@ get% getFunctionCodomainSort : Srt := getFunctionCodomainSort
 get% getAbstractedKind : cvc5.SortKind := getAbstractedKind
 get% getUninterpretedSortConstructor : Srt := getUninterpretedSortConstructor
 get% getUninterpretedSortConstructorArity : UInt32 := getUninterpretedSortConstructorArity
-get% getInstantiatedParameters : Srts := getInstantiatedParameters
+
+/-- The sorts a parametric datatype or an uninterpreted sort constructor was instantiated with.
+
+See `Srt.instantiate`.
+-/
+def getInstantiatedParameters (srt : Srt) : Res Srts :=
+  S.getInstantiatedParameters srt.toUnsafe |>.mapError Error.ofUnsafe
+@[inherit_doc getInstantiatedParameters]
+def getInstantiatedParameters? (srt : Srt) : Option Srts :=
+  S.getInstantiatedParameters? srt.toUnsafe
 
 /-! ### Datatypes
 
-The datatype *sorts*: what a constructor, selector or tester sort relates. The `Datatype` these
-answer for has its own API, which is not wrapped yet.
+The datatype *sorts*: what a constructor, selector or tester sort relates. The `Datatype` they
+answer has its own API, in `Cvc.Untyped.Theory.Datatype`.
 -/
 
 get% getDatatype : Datatype := getDatatype
@@ -349,10 +387,11 @@ def substitute? (srt : Srt) (srts replacements : Srts) : Option Srt :=
 end Srt
 
 
-/-! ## Lean types encoding cvc sorts and their values -/
+/-! ## Sort refinements -/
 
 namespace Typ
 
+/-- Whether a sort is arithmetic: `Int` or `Real`. -/
 abbrev isArith : Typ → Bool
 | int | real => true
 | bool | string | regex | roundingMode
@@ -363,6 +402,7 @@ abbrev isArith : Typ → Bool
 omit [Ω] in
 theorem typs_of_isArith {typ : Typ} : typ.isArith → typ = int ∨ typ = real := by grind
 
+/-- Whether a sort has concatenation: strings and sequences. -/
 abbrev hasConcat : Typ → Bool
 | string | seq _ => true
 | int | real
@@ -377,15 +417,14 @@ theorem typs_of_hasConcat {typ : Typ} : typ.hasConcat → typ = string ∨ ∃ t
 end Typ
 
 
-/-! ## Conversions between `Typ` and `Srt`
-
-Each direction is a mutual pair, `Typ`/`Typ?` being mutual. `Typ.toSrt` is **total**: the split is
-exactly cvc5's first-class rule, so every `Typ` denotes a sort it accepts.
--/
+/-! ## Conversions between `Typ` and `Srt` -/
 
 mutual
 
-/-- Conversion to `Srt`. -/
+/-- The sort a `Typ` describes.
+
+Fails only on a `datatype` or `uninterpreted` name no sort was declared under in this scope.
+-/
 public def Typ.toSrt [Ω] : Typ → Env Srt
 | .bool => Srt.bool | .int => Srt.int | .real => Srt.real
 | .regex => Srt.regex | .string => Srt.string
@@ -572,20 +611,17 @@ end Srt
 /-- The `Typ` associated to some type. -/
 abbrev Typ.of (α : Type) [A : ToTyp α] : Typ := A.typ
 
-/-- `Srt` associated to a type through `WithTyp`. -/
+/-- The sort a type denotes, through its `ToTyp` instance. -/
 abbrev ToTyp.srt [ToTyp α] : Env Srt := Typ.of α |>.toSrt
 
 @[inherit_doc ToTyp.srt]
 abbrev Srt.of (α : Type) [A : ToTyp α] : Env Srt := A.srt
 
 
-/-- The usual order on rationals, which core does not provide.
-
-Without it a real-valued set, bag or array index cannot be spelled, `Set` and friends wanting their
-elements ordered. It is at low priority so that an order from elsewhere — Mathlib's — wins where
-both exist rather than clashing with this one.
--/
+/-- The usual order on rationals, which core lacks; at low priority, so that Mathlib's wins. -/
 instance (priority := low) instOrdRat : Ord Rat := ⟨fun x y => compareOfLessAndEq x y⟩
+-- Without it a real-valued set, bag or array index cannot be spelled, `Set` and friends wanting
+-- their elements ordered.
 
 namespace ToTyp
 
@@ -595,6 +631,7 @@ instance : ToTyp Rat := ⟨.real⟩
 instance : ToTyp String := ⟨.string⟩
 instance : ToTyp (BitVec size) := ⟨.bitVec size⟩
 instance : ToTyp Cvc.Float.RoundingMode := ⟨.roundingMode⟩
+/-- Lean's `Array` denotes cvc5's sequences; SMT-LIB arrays are `TotalMap`. -/
 instance [A : ToTyp α] : ToTyp (Array α) := ⟨.seq A.typ⟩
 /-- Lean's `Option` denotes cvc5's `Nullable`. -/
 instance [A : ToTyp α] : ToTyp (Option α) := ⟨.nullable A.typ⟩
@@ -603,15 +640,20 @@ end ToTyp
 
 
 
-/-- Carries a proof that the `Typ` associated to `α` is arithmetic. -/
+/-- `α` denotes an arithmetic sort: `Int` or `Rat`. -/
 class IsArith (α : Type) [A : ToTyp α] : Prop where
   /-- Proof that `α`'s `Typ` is arithmetic. -/
   valid_typ : A.typ.isArith := by simp [Typ.isArith, ToTyp.typ] <;> grind
+-- A `Prop` whose field an autoparam discharges, so an instance is proved rather than declared;
+-- `Typ.typs_of_isArith` lets a typed operator case-split on which sort it actually got. Likewise
+-- `HasConcat`.
 
 instance : IsArith Int := {}
 instance : IsArith Rat := {}
 
+/-- `α` denotes a sort with concatenation: `String` or `Array _`. -/
 class HasConcat (α : Type) [A : ToTyp α] : Prop where
+  /-- Proof that `α`'s `Typ` has concatenation. -/
   valid_typ : A.typ.hasConcat := by simp [Typ.hasConcat, ToTyp.typ] <;> grind
 
 instance : HasConcat String := {}
@@ -621,6 +663,7 @@ instance [ToTyp α] : HasConcat (Array α) := {}
 
 /-! ### Regular expressions -/
 
+/-- The Lean type indexing regular-expression terms; it carries no data. -/
 structure Regex
 deriving DecidableEq, Hashable, Ord
 
@@ -648,9 +691,10 @@ end ToTyp
 
 Where the sort-erased DSL lets a sort be written — a quantifier's binders, a grammar's
 non-terminals and parameters, a record field's stated sort — it accepts **a Lean type or a `Srt`**
-alike. Which one was written is only known once the term is elaborated, `int` and `Int` both being
-identifiers, so it takes an elaborator rather than a macro.
+alike, through `srtOf%`.
 -/
+-- Which one was written is only known once the term is elaborated, `int` and `Int` both being
+-- identifiers, so it takes an elaborator rather than a macro.
 
 /-- `srtOf% e` is `Srt.of e` when `e` is a Lean type, and `pure e` when it is a `Srt`. -/
 syntax (name := srtOfStx) "srtOf% " term:max : term

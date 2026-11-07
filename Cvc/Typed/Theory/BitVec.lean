@@ -19,9 +19,9 @@ public import Cvc.Spec.BitVec
 
 
 
-/-! # Generated bit-vector constructors, typed
+/-! # Bit-vectors, typed
 
-`bvConcat` is the entry whose result index is computed from its arguments': its Lean signature is
+A result's width is computed from its arguments' and indices: `bvConcat` is
 `Term (BitVec n) → Term (BitVec m) → Env (Term (BitVec (n + m)))`, matching `BitVec.append`.
 -/
 namespace Cvc.Typed.Term public section
@@ -45,5 +45,8 @@ def isBitVecValue (term : Term (BitVec size)) : Bool := T.isBitVecValue term
 def getBitVecValue (term : Term (BitVec size)) : Env (BitVec size) := T.getBitVecValue term
 
 instance : SrtLike (BitVec size) where
-  valueToTerm bv := mkBitVec size bv.toNat.toUInt64
+  -- `mkBitVec` takes a `UInt64`, so a wider value goes through its binary digits
+  valueToTerm bv :=
+    if size ≤ 64 then mkBitVec size bv.toNat.toUInt64
+    else mkBitVecOfString size (String.ofList (Nat.toDigits 2 bv.toNat)) 2
   termToValue := getBitVecValue

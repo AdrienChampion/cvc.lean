@@ -109,7 +109,7 @@ As shown above `Solver.assert` adds a {lean}`Term Bool` assertion in the solver.
 
 # Check-sat and modal environments
 
-The _check-sat_ function is significantly more complex, to see why let us look a the _get-value_ function first.
+The _check-sat_ function is significantly more complex, to see why let us look at the _get-value_ function first.
 
 {decl Cvc.Typed.Solver.getValue}
 
@@ -242,7 +242,7 @@ Defining a function symbol in a solver is very similar to building a lambda: the
   let solver ← Solver.new
   solver.setOpt .smt_produceModels true
 
-  let (i, j) := (← Term.mkBVar "i", ← Term.mkBVar "j")
+  let (i, j) := (← BVar.mk "i", ← BVar.mk "j")
   let bVars := BVars.empty.push i |>.push j
   let saturatingMaxDef ← (smt!
     let max ← if j ≤ i then i else j;
@@ -284,8 +284,8 @@ variable [Ω]
   solver.setOption "fmf-fun" "true"
   let even ← solver.declareFun "even" #[int] bool
   let odd ← solver.declareFun "odd" #[int] bool
-  let n ← Term.mkBVar int "n"
-  let m ← Term.mkBVar int "m"
+  let n ← BVar.mk int "n"
+  let m ← BVar.mk int "m"
   solver.defineFunsRec #[even, odd] #[#[n], #[m]] #[
     ← smt! if n ≤ 0 then n = 0 else odd (n - 1),
     ← smt! if m ≤ 0 then false else even (m - 1)]

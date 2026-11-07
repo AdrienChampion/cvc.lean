@@ -21,12 +21,14 @@ lake run buildApiDocs / serveApiDocs   # the doc-gen4 API reference
 - Toolchain: `leanprover/lean4:v4.35.0`, and the same in `CvcManual` — keep the two in step,
   with Verso's `rev` pinned to the same version tag. The API reference's project is generated and
   follows `lean-toolchain` on its own (see "Documentation").
-- One dependency: `cvc5 @ 41e4779` (`inputRev = "main"`, so `lake update` moves it).
+- One dependency: `cvc5 @ d19a134` (`inputRev = "main"`, so `lake update` moves it). lean-cvc5 tags
+  every commit with its short hash and attaches its build archives to that release; `d19a134` carries
+  a second tag, `0e593cc`, whose release Lake picks, with the same archives.
   `precompileModules := true` on the `cvc` package.
 - **No `lake update` is needed to build.** A fresh clone builds with `lake build` alone: Lake
   clones lean-cvc5 at the manifest's revision, and lean-cvc5's `cvc5Enums` build target downloads
-  the precompiled cvc5 for the platform — verified on a clean clone. The README still says
-  otherwise. lean-cvc5 has no post-update hook.
+  the precompiled cvc5 for the platform — verified on a clean clone. lean-cvc5 has no post-update
+  hook.
 - **TEMPORARY, to remove: a glibc shim on Linux.** lean-cvc5's Linux cvc5 was compiled against
   glibc ≥ 2.38 and references `__isoc23_strtol`/`__isoc23_fscanf`, which the older glibc Lean links
   executables against lacks, so no executable using the library linked on Linux, the manual's
@@ -367,8 +369,10 @@ Two consequences of `List (String × Typ)` worth knowing before editing:
   opaque pair is not a subterm;
 - `deriving Ord` needs a `local instance [Ord α] [Ord β] : Ord (α × β)`, since core has none.
   `Ord (List ·)` exists, `Hashable (· × ·)` exists — only the product order is missing, which is
-  why `Hashable` derived and `Ord` did not. It is `local` so the library does not impose an orphan
-  instance on its users.
+  why `Hashable` derived and `Ord` did not. The library does export one, `Cvc.instOrdProd` in
+  `Types/Tuple.lean`, since a set of tuples cannot be written without it; it is at low priority,
+  so another library's product order wins where both are present. Not `scoped`: a user spelling
+  `Cvc.Set (Int × Bool)` without opening `Cvc` would get an unexplained missing instance.
 
 `Srt.lean` covers **all 62 declarations of `cvc5.Sort`**, in three groups. The constructors, which
 live on cvc5's `TermManager` rather than on `Sort` (`Srt.bool`/`int`/…/`tuple`/`function`, plus
@@ -535,8 +539,9 @@ op% bvConcat {n m : width} (lft : bitVec n) (rgt : bitVec m) : bitVec (n + m) :=
 - **`SizeExpr` supports `+`, `-`, `*` and `arity`** — `hi - lo + 1` for `EXTRACT`, `n * count` for
   `REPEAT`, `n + extra` for the extensions. Subtraction is `Nat` subtraction. `arity` is the number
   of term arguments: a literal in a fixed-arity signature, the term array's `.size` in an n-ary
-  one, which is what lets `bvFromBools : (terms : Terms Bool) → … → Env (Term (BitVec terms.size))`
-  depend on a runtime value. The identifier `arity` is therefore reserved in a size position.
+  one, so a result sort can depend on a runtime value. The identifier `arity` is therefore
+  reserved in a size position. No entry uses it any more: `BITVECTOR_FROM_BOOLS` did, and is not
+  wrapped, cvc5 forbidding terms of that kind through its API (asserting one aborts the process).
 - **Constructors use a `tm` build.** `op% setEmpty {α} : set α := SET_EMPTY tm mkEmptySet` builds
   through `cvc5.TermManager.mkEmptySet` rather than `mkTerm`. The `kind` is still recorded — it is
   the kind the resulting term *has* — but is not what builds it. Three further pieces go with it:
@@ -547,7 +552,7 @@ op% bvConcat {n m : width} (lft : bitVec n) (rgt : bitVec m) : bitVec (n + m) :=
     `mkOpOfIndices` takes `Nat`;
   - `naryAs <name>` names the n-ary variant, for when `<id>N` is not the right name: the `N`
     suffix suits an operator that is the same operation at greater arity, not one whose
-    distinction is singular versus plural (`bvFromBool` versus `bvFromBools`);
+    distinction is singular versus plural. No entry uses it any more;
   - `tmSortOf <fn> <shape>` names the shape whose sort **cvc5's method** wants, for the methods
     that do not want the sort of the term they build. It does *not* reach the generated signature
     — see the element-sort rule below. `mkEmptySet` wants the set sort but `mkEmptySequence` wants
@@ -580,14 +585,14 @@ op% bvConcat {n m : width} (lft : bitVec n) (rgt : bitVec m) : bitVec (n + m) :=
 
 ### Status
 
-**256 `op%` entries**, 24 of them `tm` constructors, 28 with `smt!` notation, 27 indexed, across
+**253 `op%` entries**, 24 of them `tm` constructors, 28 with `smt!` notation, 27 indexed, across
 thirteen theory modules per layer:
 
 | theory | entries | coverage |
 |---|---|---|
 | bool | 12 | the connectives, plus the sort-generic `equal`, `distinct` and `ite` |
 | arithmetic | 43 | complete: comparisons, division and modulus (total and partial), `pow`/`pow2`/`log2`/`sqrt`/`exp`, the 12 transcendentals, `toReal`/`toInt`/`isInt`, `divisible`, `iand`, `piand` |
-| bit-vectors | 56 | complete |
+| bit-vectors | 53 | complete but for `BITVECTOR_BIT` and `BITVECTOR_FROM_BOOLS`, which cvc5 forbids creating through its API, and the deprecated `BITVECTOR_TO_NAT` (`bvUbvToInt` replaces it) |
 | arrays | 4 | `select`, `store`, `eqRange`, `mkConstArray` |
 | sets | 19 | complete; comprehension is hand-written, see "Quantifiers" |
 | bags | 19 | complete |
@@ -747,8 +752,9 @@ Three things worth knowing before touching these:
   value does. Bags and total maps are the exception: those readers walk the term's kind and
   children, so a built spine works. Asserting a `STORE_ALL` also needs cvc5's `--arrays-exp`.
 
-Two conversions remain unimplemented, both because cvc5 exposes no accessor: `getRegexValue` reads
-nothing back, and `ValueToTerm Regex` builds nothing. `getBagValue` also refuses the
+`Regex` has no value conversions at all, cvc5 exposing no accessor for a regex's language: an
+instance whose conversions always failed would let `getValue` at `Regex` compile and fail at run
+time. `getBagValue` also refuses the
 `BAG_INTER_MIN`/`BAG_DIFFERENCE_*` spines, which cvc5 never puts in a model.
 
 ## Substitution
@@ -1130,7 +1136,8 @@ false` unsolvable, `none` gave up) and `isSolved` fails on the third, exactly as
 found. A branch the caller omits falls back on `unexpectedSolved`/`unexpectedUnsolvable`/
 `unexpectedSynthUnknown`, which throw, dumping the *sygus constraints* where the sat versions dump
 the assertions. `checkSynthResult`/`checkSynthNextResult` are the raw forms, and `checkSynth?`
-defaults every branch to `return none` as `checkSat?` does.
+defaults the solved and unsolvable branches to `return none` and still fails on unknown, as
+`checkSat?` does.
 
 `checkSynthNext` lives in `EnvSolved` and *also* takes the three branches, returning `EnvSolvedT m
 α`: cvc5 requires it be called right after a successful check, and its own answer re-splits the
@@ -1746,8 +1753,14 @@ argument and the result of a lifted operator are nullable, so `addN'? #[]` is `s
 theory's own constructor (`mkInt` here), which the lift module does not generate. As for plain
 `addN'`, an empty array leaves the index undetermined and has to be ascribed.
 
-Status: **every theory but `Fun`** — 207 liftable entries over eleven theories, one module each per
-layer. Per-theory counts: BitVec 46, Arith 36, Float 26, String 26, Bag 18, Set 17, Seq 14, Regex 9,
+On one term, an `N'` variant (plain or lifted) answers the term for an operation and the unit for a
+relation — `equalN' #[t]` is `true`, `t` having the wrong sort (`OpSpec.unitOn1Default`). The typed
+variants pass an arithmetic unit at the operands' sort (`arithUnitAt`: `addN' (#[] : Terms Rat)` is
+`0.0`), the sort-erased ones having no sort to go by. `on0`/`on1` are built with `mkIdent`, so a
+caller can pass them by name; hygienic, they could not be named at all.
+
+Status: **every theory but `Fun`** — 205 liftable entries over eleven theories, one module each per
+layer. Per-theory counts: BitVec 44, Arith 36, Float 26, String 26, Bag 18, Set 17, Seq 14, Regex 9,
 Bool 8, FiniteField 4, Array 3. `Fun` is deliberately left out.
 
 Only Arith and Bool actually have unit elements, so only they *need* the plain-theory import — but
@@ -2309,14 +2322,13 @@ Term construction and the solver are done — every theory is covered, and the s
 with lean-cvc5. What follows is everything that is *not* term construction or solver driving:
 
 1. **`smt!` DSL parity** — the fixed forms the expander still lacks: the `name` literal for
-   `mkSymbol`, a sort ascription `?[term : type]` over `typeCheck`, escaped string literals (both
-   layers' `Theory/String` expansions hard-code `useEscapes := false`), and the
+   `mkSymbol`, a sort ascription `?[term : type]` over `typeCheck`, and the
    `smtFun!`/`smtPred!`/`smtRel!` shorthands on top of `smt! fun`, none of which exist. Both
    remaining literal-shaped items are **asymmetric across the layers** and need a decision before
    they can be written: the typed layer gets the sort from the index, while sort-erased `mkSymbol`
    takes a `Srt` and a sort ascription has no index to check against.
 
-   Beyond the fixed forms, **28 of the 256 `op%` entries carry a notation** and the rest are
+   Beyond the fixed forms, **28 of the 253 `op%` entries carry a notation** and the rest are
    reachable only through `![…]`. Adding more runs into the collisions listed under "The `smt!`
    DSL" — division has no notation at all for that reason — so that dispatch has to be settled
    first. Every notated operator whose `nary` is not `.never` already has its bracket form
@@ -2422,5 +2434,8 @@ Vendored at `.lake/packages/cvc5` (~25k lines of Lean). Worth reading when a wra
 - Its own tests under `cvc5Test/Unit/Api*.lean` are the best reference for what the raw API does.
 - Known gaps (from its README): `Term.getStringValue`, statistics, option info, driver options,
   plugins, parser stream input. cvc.lean works around the string one by parsing `term.toString`
-  (see `Untyped.Term.getStringValue` in
-  [Cvc/Untyped/Theory/String.lean](Cvc/Untyped/Theory/String.lean)).
+  and undoing its SMT-LIB escapes (`""`, `\u{…}`) — see `Untyped.Term.getStringValue` in
+  [Cvc/Untyped/Theory/String.lean](Cvc/Untyped/Theory/String.lean). The other direction,
+  `mkStringValue`, writes every character outside printable ASCII (and `\`) as `\u{…}`, since cvc5
+  refuses them raw; the value conversions and `smt!`'s string literals go through it, so a Lean
+  string, Lean's escapes included, is the string the term denotes.

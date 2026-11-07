@@ -67,12 +67,12 @@ A proof is indexed by the solver that produced it and by the _component_ it was 
 ```lean (name := ex_Proof_walk)
 #eval Env.runIO do
   let s ← Solver.new
-  s.setOption "produce-proofs" "true"
+  s.setOpt .smt_produceProofs true
   let b ← Term.mkSymbolAs Bool "b"
   s.assert b
   s.assert (← smt! ¬ b)
   let proofs ← s.checkSat
-    (ifUnsat := do return ← s.getUnsatProof)
+    (ifUnsat := s.getUnsatProof)
   for p in proofs do
     for step in p do
       println! "{step.getRule} ⊢ {step.getResult}"
@@ -112,12 +112,12 @@ def describe {s : Solver} : s.ProofView pc → String
 
 #eval Env.runIO do
   let s ← Solver.new
-  s.setOption "produce-proofs" "true"
+  s.setOpt .smt_produceProofs true
   let b ← Term.mkSymbolAs Bool "b"
   s.assert b
   s.assert (← smt! ¬ b)
   let proofs ← s.checkSat
-    (ifUnsat := do return ← s.getUnsatProof)
+    (ifUnsat := s.getUnsatProof)
   for p in proofs do
     for step in p do println! describe step.view
 ```
@@ -136,7 +136,7 @@ The examples below refute `x ≥ 1`, `x ≤ 1` and `f x ≠ f 1`: arithmetic dec
 ```lean
 def congruence : Env Solver := do
   let s ← Solver.new
-  s.setOption "produce-proofs" "true"
+  s.setOpt .smt_produceProofs true
   let f ← Term.mkSymbolAs (Int → Int) "f"
   let x ← Term.mkSymbolAs Int "x"
   (smt! x ≥ 1) >>= s.assert
@@ -157,7 +157,7 @@ A proof is a graph rather than a tree: cvc5 shares a sub-proof between the steps
 #eval Env.runIO do
   let s ← congruence
   let proofs ← s.checkSat
-    (ifUnsat := do return ← s.getUnsatProof)
+    (ifUnsat := s.getUnsatProof)
   for p in proofs do
     let clauses : Array (Term Bool) :=
       p.fold #[] (m := Id)
@@ -186,7 +186,7 @@ The fold runs in the caller's monad, and `break` ends a `for` loop over the step
 #eval Env.runIO do
   let s ← congruence
   let proofs ← s.checkSat
-    (ifUnsat := do return ← s.getUnsatProof)
+    (ifUnsat := s.getUnsatProof)
   for p in proofs do
     let rebuilt : Except String Nat :=
       p.foldUp fun q v => match v with
@@ -211,7 +211,7 @@ A `full` proof leaves no assumption open, its root scope discharging the asserti
 #eval Env.runIO do
   let s ← congruence
   let proofs ← s.checkSat
-    (ifUnsat := do return ← s.getUnsatProof)
+    (ifUnsat := s.getUnsatProof)
   for p in proofs do
     if let .scope outer _ := p.view then
       if let .scope refutation _ := outer.view then
@@ -229,8 +229,8 @@ The `theoryLemmas` component answers one proof per theory lemma, whose conclusio
 ```lean (name := ex_Proof_lemmas)
 #eval Env.runIO do
   let s ← congruence
-  let lemmas ← s.checkSat (ifUnsat := do
-    return ← s.getUnsatProof .theoryLemmas)
+  let lemmas ← s.checkSat (ifUnsat :=
+    s.getUnsatProof .theoryLemmas)
   for p in lemmas do
     println! "lemma : {p.getResult}"
     println! "steps : {p.size}"

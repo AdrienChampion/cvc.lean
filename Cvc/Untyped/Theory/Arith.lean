@@ -37,7 +37,7 @@ gen_untyped_view% from Cvc.Spec.Arith
 negative value rather than answer.
 -/
 
-@[inherit_doc T.getRealOrIntegerValueSign]
+/-- The sign of an integer or real value, `-1`, `0` or `1`, failing on any other term. -/
 def getSign (term : Term) : Res Int :=
   T.getRealOrIntegerValueSign term.toUnsafe |>.mapError Error.ofUnsafe
 
@@ -139,12 +139,12 @@ instance : SrtLike Rat where
 
 
 
-/-! ## The DSL's literals for this theory
+/-! ## `smt!` literals
 
-Declared here rather than in `Cvc.Ext` so that the grammar a user gets is the grammar of the
-theories they imported: without this module, `smt!` does not accept them at all. The expander's own
-machinery lives in `Cvc.Ext`, never in `Cvc`.
+Integer and real literals in `smt!`. Without this module `smt!` accepts neither.
 -/
+-- Declared here rather than in `Cvc.Ext` so that the grammar a user gets is the grammar of the
+-- theories they imported. The expander's own machinery lives in `Cvc.Ext`, never in `Cvc`.
 
 public meta section
 

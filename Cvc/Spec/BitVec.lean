@@ -13,8 +13,7 @@ public import Cvc.Spec.Decl
 
 /-! # Bit-vector specification
 
-`bvConcat` is the entry whose result index is computed from its arguments'. The overflow
-predicates produce `Bool`, while `bvUltbv`/`bvSltbv` produce a one-bit bit-vector.
+The overflow predicates produce `Bool`, while `bvUltbv`/`bvSltbv` produce a one-bit bit-vector.
 -/
 namespace Cvc public section
 
@@ -55,28 +54,31 @@ op% bvSub {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_SUB
 /-- Multiplication modulo `2 ^ n`. -/
 op% bvMul {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_MULT
 
-/-- Unsigned division, truncating towards zero. -/
+/-- Unsigned division, truncating towards zero; all ones on a zero divisor. -/
 op% bvUdiv {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_UDIV
 
-/-- Unsigned remainder. -/
+/-- Unsigned remainder; the dividend on a zero divisor. -/
 op% bvUrem {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_UREM
 
-/-- Signed division, truncating towards zero. -/
+/-- Signed division, truncating towards zero.
+
+On a zero divisor: `-1` for a non-negative dividend, `1` for a negative one.
+-/
 op% bvSdiv {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_SDIV
 
-/-- Signed remainder, sign following the dividend. -/
+/-- Signed remainder, sign following the dividend; the dividend on a zero divisor. -/
 op% bvSrem {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_SREM
 
-/-- Signed remainder, sign following the divisor. -/
+/-- Signed remainder, sign following the divisor; the dividend on a zero divisor. -/
 op% bvSmod {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_SMOD
 
-/-- Logical left shift. -/
+/-- Logical left shift of `lft` by `rgt` bits. -/
 op% bvShl {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_SHL infixl "<<<" 75
 
-/-- Logical right shift. -/
+/-- Logical right shift of `lft` by `rgt` bits. -/
 op% bvLshr {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_LSHR infixl ">>>" 75
 
-/-- Arithmetic right shift. -/
+/-- Arithmetic right shift of `lft` by `rgt` bits. -/
 op% bvAshr {n : size} (lft rgt : bitVec n) : bitVec n := BITVECTOR_ASHR
 
 /-- Unsigned less-than. -/
@@ -103,7 +105,7 @@ op% bvSgt {n : size} (lft rgt : bitVec n) : bool := BITVECTOR_SGT
 /-- Signed greater-than-or-equal-to. -/
 op% bvSge {n : size} (lft rgt : bitVec n) : bool := BITVECTOR_SGE
 
-/-- Concatenation, whose result size is the sum of its arguments'. -/
+/-- Concatenation, `lft` giving the most significant bits. -/
 op% bvConcat {n m : size} (lft : bitVec n) (rgt : bitVec m) : bitVec (n + m)
   := BITVECTOR_CONCAT
 
@@ -115,9 +117,6 @@ op% bvRedand {n : size} (bv : bitVec n) : bitVec 1 := BITVECTOR_REDAND
 
 /-- Disjunction of all the bits, as a one-bit bit-vector. -/
 op% bvRedor {n : size} (bv : bitVec n) : bitVec 1 := BITVECTOR_REDOR
-
-/-- Conversion to a non-negative integer. -/
-op% bvToNat {n : size} (bv : bitVec n) : int := BITVECTOR_TO_NAT
 
 
 
@@ -166,7 +165,7 @@ op% bvSltbv {n : size} (lft rgt : bitVec n) : bitVec 1 := BITVECTOR_SLTBV
 
 /-! ## Indexed operators -/
 
-/-- The bit range `[lo, hi]`, both bounds included. -/
+/-- Bits `hi` down to `lo` of `bv`, bit 0 being the least significant; needs `lo ≤ hi < n`. -/
 op% bvExtract [hi lo] {n : size} (bv : bitVec n) : bitVec (hi - lo + 1) := BITVECTOR_EXTRACT
 
 /-- The given number of copies of a bit-vector, concatenated. -/
@@ -184,10 +183,7 @@ op% bvRotateLeft [count] {n : size} (bv : bitVec n) : bitVec n := BITVECTOR_ROTA
 /-- Rotation to the right by the given number of bits. -/
 op% bvRotateRight [count] {n : size} (bv : bitVec n) : bitVec n := BITVECTOR_ROTATE_RIGHT
 
-/-- The bit at the given index, as a `Bool`. -/
-op% bvBit [idx] {n : size} (bv : bitVec n) : bool := BITVECTOR_BIT
-
-/-- Conversion of an integer to a bit-vector of the given size. -/
+/-- Conversion of an integer to a bit-vector of the given size, modulo `2 ^ size`. -/
 op% intToBv [size] (arg : int) : bitVec size := INT_TO_BITVECTOR
 
 /-! ## Constructors
@@ -195,20 +191,9 @@ op% intToBv [size] (arg : int) : bitVec size := INT_TO_BITVECTOR
 The size is an index, so it is an explicit `Nat` and also fixes the result's own size.
 -/
 
-/-- A bit-vector literal of the given size. -/
+/-- A bit-vector literal of the given size, keeping the low `size` bits of `value`. -/
 op% mkBitVec [size] (value :! UInt64) : bitVec size := CONST_BITVECTOR tm mkBitVector
 
-/-- A bit-vector literal of the given size, read in the given base. -/
+/-- A bit-vector literal of the given size, read in `base`, which must be 2, 10 or 16. -/
 op% mkBitVecOfString [size] (repr :! String) (base :! UInt32) : bitVec size
   := CONST_BITVECTOR tm mkBitVectorOfString
-
-/-! ## From booleans
-
-`BITVECTOR_FROM_BOOLS` builds a bit-vector one bit per argument, so its result's size is its own
-arity rather than a function of its arguments' sorts. `bvFromBool` takes a single bit;
-`bvFromBools` takes several, and its result size is the term array's, which makes that signature
-depend on a runtime value.
--/
-
-/-- The one-bit bit-vector made of the given bit. -/
-op% bvFromBool (bit : bool) : bitVec arity := BITVECTOR_FROM_BOOLS naryAs bvFromBools

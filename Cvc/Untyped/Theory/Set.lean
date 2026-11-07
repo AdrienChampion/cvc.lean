@@ -42,7 +42,10 @@ gen_untyped_view% from Cvc.Spec.Set
 A `Cvc.Set` denotes an SMT set: the empty set, with each element inserted.
 -/
 
-@[inherit_doc T.isSetValue]
+/-- Whether a term is a set value: a canonical union of singletons of values, as a model answers.
+
+A set built from constructors is generally not one, and the universe set never is.
+-/
 def isSetValue (term : Term) : Bool := T.isSetValue term.toUnsafe
 
 
@@ -72,9 +75,9 @@ instance [TermToValue α] : TermToValue (Cvc.Set α) := ⟨getSetValue⟩
 
 /-! ## Comprehension
 
-`{ elem | bvs. pred }`: a set built by binding variables, so it is written here by hand rather than
-generated, as quantifiers are. cvc5 supports it only under `sets-exp`, and its reasoning about one
-is incomplete: even a membership in a finite comprehension can come back `unknown`.
+`{ elem | bvs. pred }`, a set built by binding variables. cvc5 supports it only under `sets-exp`,
+and its reasoning about one is incomplete: even a membership in a finite comprehension can come back
+`unknown`.
 -/
 
 /-- The set of the values `elem` takes, over the bindings of `bvs` that satisfy `pred`. -/

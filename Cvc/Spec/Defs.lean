@@ -53,10 +53,9 @@ inductive SizeExpr
   | mul (lft rgt : SizeExpr)
   /-- The operator's own arity: how many term arguments it was applied to.
 
-  `BITVECTOR_FROM_BOOLS` builds a bit-vector one bit per argument, so its result's size is not a
-  function of its arguments' sorts but of how many there are. In the fixed-arity constructor this
-  is a literal; in the n-ary one it is the term array's size, which makes that signature depend on
-  a runtime value.
+  For a result whose size is not a function of its arguments' sorts but of how many there are. In
+  the fixed-arity constructor this is a literal; in the n-ary one it is the term array's size,
+  which makes that signature depend on a runtime value. No entry currently uses it.
   -/
   | arity
 deriving Inhabited, Repr, BEq
@@ -299,8 +298,7 @@ structure OpSpec where
   /-- Name of the n-ary variant, when `<id>N` is not the right one.
 
   The `N` suffix suits an operator whose n-ary form is the same operation at greater arity. It
-  does not suit one where the distinction is singular versus plural: `bvFromBool` takes a bit and
-  `bvFromBools` takes several.
+  does not suit one where the distinction is singular versus plural, a bit against several bits.
   -/
   naryName : Option Name := none
   /-- Surface notation in the `smt!` DSL. -/
